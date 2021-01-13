@@ -1,0 +1,11 @@
+# Test folder
+test/*
+
+# Python cache
+__pycache__
+src/__pycache__
+
+# Editors
+.vscode
+.spyproject
+

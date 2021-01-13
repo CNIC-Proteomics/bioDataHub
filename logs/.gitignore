@@ -1,0 +1,3 @@
+# Discard all files 
+*
+!.gitignore

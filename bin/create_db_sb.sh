@@ -11,7 +11,7 @@ LOGDIR="${CODEDIR}/logs/${DATE}"
 # Function that executes the input command
 run_cmd () {
   echo "-- $1"  
-  # eval $1
+  eval $1
 }
 
 # prepare workspaces

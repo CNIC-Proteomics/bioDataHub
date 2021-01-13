@@ -46,7 +46,7 @@ class creator:
     # Column name with the cross-reference id
     XID = 'Isoform'
     # Meta terms of isoform
-    META = ['xref_UniProt_Name','Isoform','Gene','prot_UniProt_Class','prot_Species','Description']
+    META = ['xref_UniProt_Name','Isoform','Gene','prot_UniProt_Class','prot_Species','Description','Comment_Line']
     # Xreferences terms of isoform
     XTERMS = [
         ('Ensembl',  [('xref_Ensembl_protId','(ENS\w*P\d+[.]?\d*)'),('xref_Ensembl_transcId','(ENS\w*T\d+[.]?\d*)'),('xref_Ensembl_GeneId','(ENS\w*G\d+[.]?\d*)'),('Isoform','\[([^\]]*)\]')]),
@@ -98,6 +98,9 @@ class creator:
             logging.debug("remove duplicate sequences")
             self._remove_duplicates(self.db_fasta, self.db_fasta)
             
+        # create report from fasta file with the UniProt accession!! (key_function)
+        self.db_fasta_seqio = SeqIO.index(self.db_fasta, "fasta", key_function=lambda rec : rec.split("|")[1])
+
         # create data files
         self.db_uniprot = self.TMP_DIR +'/'+ self.outfname +'.uniprot.dat'
         self.db_corum   = self.TMP_DIR +'/'+ ".".join(os.path.basename( self.URL_CORUM ).split(".")[:-1]) # get the filename from the URL (without 'zip' extension)
@@ -246,17 +249,22 @@ class creator:
                 pattern = re.search(r'([\w|\s]*)\s+\(\w*\)', record.organism, re.I | re.M)
                 species = pattern[1] if pattern else record.organism
                 # extract isoforms IDs
-                comm = [c for c in record.comments if 'ALTERNATIVE PRODUCTS:' in c]
-                if comm:
-                    IsoIds = re.findall(r'IsoId=([^\;|\,]*)', comm[0], re.I | re.M | re.DOTALL)
+                altprod = [c for c in record.comments if 'ALTERNATIVE PRODUCTS:' in c]
+                if altprod:
+                    IsoIds = re.findall(r'IsoId=([^\;|\,]*)', altprod[0], re.I | re.M | re.DOTALL)
                     # delete *-1 prefix from isoform Ids
                     IsoIds = [ i.replace('-1','') for i in IsoIds ]
                 else:
                     IsoIds = [acc]
+                # extract the comment line of fasta
+                if acc in self.db_fasta_seqio:
+                    comm = ">"+self.db_fasta_seqio[acc].description
+                else:
+                    comm = ''                    
                 
                 # create a dataframe with the Metadata information ---
                 # UniProt accesion isoform is the index
-                df1 = pd.DataFrame(columns=self.META, data=[[name,IsoIds,gene,dclass,species,dsc]])
+                df1 = pd.DataFrame(columns=self.META, data=[[name,IsoIds,gene,dclass,species,dsc,comm]])
                 df1 = df1.explode(self.XID)
                 df1.set_index(self.XID, inplace=True)
                 

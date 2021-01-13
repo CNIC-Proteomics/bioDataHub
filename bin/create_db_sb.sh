@@ -2,7 +2,7 @@
 
 # Declare variables
 DATE="$(date +"%Y%m")" # with date folder
-CODEDIR="d:/projects/databases"
+CODEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd -P)/.."
 BASEDIR="//tierra.cnic.es/SC/U_Proteomica/UNIDAD/Databases/UniProt_sync"
 OUTDIR="${BASEDIR}/${DATE}" # with date folder
 WSDIR="${BASEDIR}/current_release"
@@ -11,7 +11,7 @@ LOGDIR="${CODEDIR}/logs/${DATE}"
 # Function that executes the input command
 run_cmd () {
   echo "-- $1"  
-  eval $1
+  # eval $1
 }
 
 # prepare workspaces
@@ -35,17 +35,31 @@ done
 
 # for the following species...
 # create the Target/Decoy database
-for FASTA in $(ls -1 "${OUTDIR}"/*.fasta)
+for INFILE in $(ls -1 "${OUTDIR}"/*.fasta)
 do
     # get local variables
-    filename=$(basename "${FASTA}")
+    filename=$(basename "${INFILE}")
     filename="${filename%.*}"
     OUTFILE_dc="${OUTDIR}/${filename}.decoy.fasta"
     OUTFILE_tg="${OUTDIR}/${filename}.target.fasta"
     OUTFILE="${OUTDIR}/${filename}.target-decoy.fasta"
     LOGFILE="${LOGDIR}/decoyPYrat.${filename}.log"
     # execute commands
-    CMD="time python '${CODEDIR}/src/decoyPYrat.v2.py' --output_fasta '${OUTFILE_dc}' --decoy_prefix=DECOY '${FASTA}' &> '${LOGFILE}' && cat ${OUTFILE_tg} ${OUTFILE_dc} > ${OUTFILE}"
+    CMD="time python '${CODEDIR}/src/decoyPYrat.v2.py' --output_fasta '${OUTFILE_dc}' --decoy_prefix=DECOY '${INFILE}' &> '${LOGFILE}' && cat ${OUTFILE_tg} ${OUTFILE_dc} > ${OUTFILE}"
+    run_cmd "${CMD}"
+done
+
+# for the following species...
+# create the relationship file "commentline2category" (the version of protein2category)
+for INFILE in $(ls -1 "${OUTDIR}"/*.categories.tsv)
+do
+    # get local variables
+    filename=$(basename "${INFILE}")
+    filename="${filename%.categories.tsv}"
+    OUTFILE="${OUTDIR}/${filename}.cat.tsv"
+    LOGFILE="${LOGDIR}/createRels.${filename}.log"
+    # execute commands
+    CMD="time python '${CODEDIR}/src/createRels.v023.py' -vv  -ii '${INFILE}' -ji '${INFILE}' -o '${OUTFILE}' -i 'Comment_Line' -j 'cat_*' &> '${LOGFILE}'"
     run_cmd "${CMD}"
 done
 

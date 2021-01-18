@@ -159,7 +159,7 @@ for fasta in fastas:
 
 	#write decoy protein accession and sequence to file
 	dcount += 1
-	outfa.write('>' + args.dprefix + '_' + str(dcount) + '\n')
+	outfa.write('>' + args.dprefix + '_' + name + '\n')
 	outfa.write(decoyseq + '\n')
 
 		

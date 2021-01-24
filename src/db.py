@@ -257,10 +257,10 @@ class creator:
                 else:
                     IsoIds = [acc]
                 # extract the comment line of fasta
+                comm = ''
                 if acc in self.db_fasta_seqio:
                     comm = ">"+self.db_fasta_seqio[acc].description
-                else:
-                    comm = ''                    
+                    
                 
                 # create a dataframe with the Metadata information ---
                 # UniProt accesion isoform is the index

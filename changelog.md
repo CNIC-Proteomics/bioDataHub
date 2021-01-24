@@ -6,7 +6,8 @@ DATE: 2021_01
 
 ### Highlights
 
-+ Now, it is posible to create the old relationship file "protein2category".
++ Now, it is reported the updated categories with old format of relationship file "protein2category".
++ The protein identifier has been included in the DECOY identifier of FASTA file.
 
 ### Changes in the Code
 

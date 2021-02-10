@@ -41,6 +41,10 @@ class creator:
         'zebrafish': {
             'scientific': 'Danio rerio',
             'proteome': 'UP000000437'
+        },
+        'ecoli': {
+            'scientific': 'Escherichia coli',
+            'proteome': 'UP000000558'
         }
     }
     # Column name with the cross-reference id

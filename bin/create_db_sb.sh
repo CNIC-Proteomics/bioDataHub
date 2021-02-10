@@ -22,7 +22,7 @@ mkdir "${LOGDIR}"
 TYPE_LIST=(sw sw-tr)
 for TYPE in "${TYPE_LIST[@]}"
 do
-  SPECIES_LIST=(human mouse rat pig rabbit zebrafish)
+  SPECIES_LIST=(human mouse rat pig rabbit zebrafish ecoli)
   for SPECIES in "${SPECIES_LIST[@]}"
   do
     # get local variables

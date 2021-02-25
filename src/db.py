@@ -50,7 +50,7 @@ class creator:
     # Column name with the cross-reference id
     XID = 'Isoform'
     # Meta terms of isoform
-    META = ['xref_UniProt_Name','Isoform','Gene','prot_UniProt_Class','prot_Species','Description','Comment_Line']
+    META = ['xref_UniProt_Name','Isoform','Gene','Species','Description','Comment_Line','prot_UniProt_Class']
     # Xreferences terms of isoform
     XTERMS = [
         ('Ensembl',  [('xref_Ensembl_protId','(ENS\w*P\d+[.]?\d*)'),('xref_Ensembl_transcId','(ENS\w*T\d+[.]?\d*)'),('xref_Ensembl_GeneId','(ENS\w*G\d+[.]?\d*)'),('Isoform','\[([^\]]*)\]')]),

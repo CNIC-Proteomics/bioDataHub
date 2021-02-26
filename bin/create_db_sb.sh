@@ -59,7 +59,7 @@ do
     OUTFILE="${OUTDIR}/${filename}.cat.tsv"
     LOGFILE="${LOGDIR}/createRels.${filename}.log"
     # execute commands
-    CMD="time python '${CODEDIR}/src/createRels.v023.py' -vv  -ii '${INFILE}' -ji '${INFILE}' -o '${OUTFILE}' -i 'Comment_Line' -j 'cat_*' &> '${LOGFILE}'"
+    CMD="time python '${CODEDIR}/src/createRels.v023.py' -vv  -ii '${INFILE}' -ji '${INFILE}' -o '${OUTFILE}' -i 'Comment_Line' -j 'cat_*' -f 'cat_GO_*:EXP,IDA,IPI,IMP,IGI,IEP,HTP,HDA,HMP,HGI,HEP' &> '${LOGFILE}'"
     run_cmd "${CMD}"
 done
 

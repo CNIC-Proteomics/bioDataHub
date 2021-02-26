@@ -1,4 +1,18 @@
 ___
+## v1.2
+```
+DATE: 2021_02
+```
+
+### Highlights
+
++ We have included the default filter of "protein2category" file, 'cat_GO_*:EXP,IDA,IPI,IMP,IGI,IEP,HTP,HDA,HMP,HGI,HEP'
+
+### Changes in the Code
+
++ We have included the default filter of "protein2category" file, 'cat_GO_*:EXP,IDA,IPI,IMP,IGI,IEP,HTP,HDA,HMP,HGI,HEP'
+
+___
 ## v1.1
 ```
 DATE: 2021_01

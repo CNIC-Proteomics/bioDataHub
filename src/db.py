@@ -48,16 +48,16 @@ class creator:
         }
     }
     # Column name with the cross-reference id
-    XID = 'Isoform'
-    # Meta terms of isoform
-    META = ['xref_UniProt_Name','Isoform','Gene','Species','Description','Comment_Line','prot_UniProt_Class']
-    # Xreferences terms of isoform
+    XID = 'Protein'
+    # Meta terms of Protein
+    META = ['xref_UniProt_Name','Protein','Gene','Species','Description','Comment_Line','prot_UniProt_Class']
+    # Xreferences terms of Protein
     XTERMS = [
-        ('Ensembl',  [('xref_Ensembl_protId','(ENS\w*P\d+[.]?\d*)'),('xref_Ensembl_transcId','(ENS\w*T\d+[.]?\d*)'),('xref_Ensembl_GeneId','(ENS\w*G\d+[.]?\d*)'),('Isoform','\[([^\]]*)\]')]),
-        ('RefSeq',   [('xref_RefSeq_protId','(NP_\d+[.]?\d*)'),('xref_RefSeq_transcId','(NM_\d+[.]?\d*)'),('Isoform','\[([^\]]*)\]')]),
-        ('CCDS',     [('xref_CCDS','(CCDS\d+[.]?\d*)'),('Isoform','\[([^\]]*)\]')]),
+        ('Ensembl',  [('xref_Ensembl_protId','(ENS\w*P\d+[.]?\d*)'),('xref_Ensembl_transcId','(ENS\w*T\d+[.]?\d*)'),('xref_Ensembl_GeneId','(ENS\w*G\d+[.]?\d*)'),('Protein','\[([^\]]*)\]')]),
+        ('RefSeq',   [('xref_RefSeq_protId','(NP_\d+[.]?\d*)'),('xref_RefSeq_transcId','(NM_\d+[.]?\d*)'),('Protein','\[([^\]]*)\]')]),
+        ('CCDS',     [('xref_CCDS','(CCDS\d+[.]?\d*)'),('Protein','\[([^\]]*)\]')]),
     ]
-    # Category terms of isoform
+    # Category terms of Protein
     CTERMS = [
         ('GO',       [('cat_GO_C','^C:'),('cat_GO_F','^F:'),('cat_GO_P','^P:')]),
         ('KEGG',     [('cat_KEGG','')]),
@@ -66,7 +66,7 @@ class creator:
         ('CORUM',    [('cat_CORUM','')]),
         ('DrugBank', [('cat_DrugBank','')])
     ]
-    HEADERS = [ h for h in META] + [ h[0] for i in XTERMS for h in i[1] if h[0] != 'Isoform' ] + [ h[0] for i in CTERMS for h in i[1] if h[0] != 'xref_UniProt_Acc' ]
+    HEADERS = [ h for h in META] + [ h[0] for i in XTERMS for h in i[1] if h[0] != 'Protein' ] + [ h[0] for i in CTERMS for h in i[1] if h[0] != 'xref_UniProt_Acc' ]
     TIME = datetime.datetime.now().strftime("%Y%m")
 
     '''

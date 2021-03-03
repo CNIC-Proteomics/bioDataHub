@@ -268,7 +268,8 @@ class creator:
                 
                 # create a dataframe with the Metadata information ---
                 # UniProt accesion isoform is the index
-                df1 = pd.DataFrame(columns=self.META, data=[[name,IsoIds,gene,dclass,species,dsc,comm]])
+                # ['xref_UniProt_Name','Protein','Gene','Species','Description','Comment_Line','prot_UniProt_Class']
+                df1 = pd.DataFrame(columns=self.META, data=[[name,IsoIds,gene,species,dsc,comm,dclass]])
                 df1 = df1.explode(self.XID)
                 df1.set_index(self.XID, inplace=True)
                 

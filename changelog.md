@@ -1,4 +1,12 @@
 ___
+## v1.3
+```
+DATE: 2021_03
+```
+
++ Bug fixed: the columns of categories do not correspond with the data.
+
+___
 ## v1.2
 ```
 DATE: 2021_02

@@ -1,4 +1,14 @@
 ___
+## v1.4
+```
+DATE: 2021_03
+```
+
++ The output folder has changes. It includes a prefix per data. For example, 202103 (first), 202103.1, 202103.2, etc
+
++ The output folder has changed (//tierra.cnic.es/SC/U_Proteomica/UNIDAD/iSanXoT_DBs)
+
+___
 ## v1.3
 ```
 DATE: 2021_03

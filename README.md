@@ -17,6 +17,17 @@ Python3 and the following Python packages:
 
 ## Executions
 
+To execute the whole workflow:
+```bash
+./bin/create_db_sb.sh
+```
+To execute the whole workflow given a specific version.
+```bash
+./bin/create_db_sb.sh 2
+```
+The above example will save the databases in the "{date}.2" folder
+
+
 The following scripts, download the FASTA sequences from UniProt proteomes and create a file with the system biology data for the given species:
 
 Only SwissProt data

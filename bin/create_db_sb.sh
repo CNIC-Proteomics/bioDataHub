@@ -1,9 +1,15 @@
 #!/usr/bin/bash
 
 # Declare variables
-DATE="$(date +"%Y%m")" # with date folder
+echo "ARG: ${1}"
+if [[ ! -z "$1" ]]; then
+  VERSION=".${1}"
+else
+  VERSION=''
+fi
+DATE="$(date +"%Y%m")${VERSION}" # create date with version
 CODEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd -P)/.."
-BASEDIR="//tierra.cnic.es/SC/U_Proteomica/UNIDAD/Databases/UniProt_sync"
+BASEDIR="//tierra.cnic.es/SC/U_Proteomica/UNIDAD/iSanXoT_DBs"
 OUTDIR="${BASEDIR}/${DATE}" # with date folder
 WSDIR="${BASEDIR}/current_release"
 LOGDIR="${CODEDIR}/logs/${DATE}"

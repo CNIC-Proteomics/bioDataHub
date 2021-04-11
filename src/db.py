@@ -103,10 +103,10 @@ class creator:
         self.outfile = o
 
         # define output files for "create_sb"
-        self.db_uniprot = self.TMP_DIR +'/uniprot.dat'
-        # self.db_uniprot = self.TMP_DIR +'/test_2656.dat'
-        # self.db_uniprot = self.TMP_DIR +'/test_1033.dat'
-        # self.db_uniprot = self.TMP_DIR +'/test_to_solve_duplication.dat'
+        # self.db_uniprot = self.TMP_DIR +'/uniprot.dat'
+        # self.db_uniprot = self.TMP_DIR +'/../test/test_2656.dat'
+        # self.db_uniprot = self.TMP_DIR +'/../test/test_1033.dat'
+        self.db_uniprot = self.TMP_DIR +'/../test/test_to_solve_duplication.dat'
         
         self.db_fasta = self.TMP_DIR +'/proteins.fasta'
         self.db_corum   = self.TMP_DIR +'/'+ ".".join(os.path.basename( self.URL_CORUM ).split(".")[:-1]) # get the filename from the URL (without 'zip' extension)
@@ -297,12 +297,15 @@ class creator:
         dclass = record.data_class
         pattern = re.search(r'([\w|\s]*)\s+\(\w*\)', record.organism, re.I | re.M)
         species = pattern[1] if pattern else record.organism
-        # extract isoforms IDs
+        # extract isoforms IDs and the displayed isoform
         altprod = [c for c in record.comments if 'ALTERNATIVE PRODUCTS:' in c]
         IsoIds = [acc]
+        IsoDisplayed = None
         if altprod:            
             i = re.findall(r'IsoId=([^\;|\,]*)[\;|\,]+\s*Sequence=VSP_', altprod[0], re.I | re.M | re.DOTALL)
             IsoIds += i
+            ii = re.findall(r'IsoId=([^\;|\,]*)[\;|\,]+\s*Sequence=Displayed', altprod[0], re.I | re.M | re.DOTALL)
+            if ii: IsoDisplayed = ii[0]
         # for each isoform id
         # get the comment and length of isoform
         comms = []
@@ -341,11 +344,11 @@ class creator:
             if xdb in rcross:
                 rconts = rcross[xdb]
                 if   xdb == "Ensembl":
-                    (xcols, xvals) = self._extract_xref_ids(rconts, xpats, acc)
+                    (xcols, xvals) = self._extract_xref_ids(rconts, xpats, IsoDisplayed)
                 elif xdb == "RefSeq":
-                    (xcols, xvals) = self._extract_xref_ids(rconts, xpats, acc)
+                    (xcols, xvals) = self._extract_xref_ids(rconts, xpats, IsoDisplayed)
                 elif xdb == "CCDS":
-                    (xcols, xvals) = self._extract_xref_ids(rconts, xpats, acc)
+                    (xcols, xvals) = self._extract_xref_ids(rconts, xpats, IsoDisplayed)
             else:
                 # create empty dict with the name of colum
                 for xc,xv in xpats:
@@ -410,7 +413,7 @@ class creator:
                         
         return df1
     
-    def _extract_xref_ids(self, rconts, xpats, acc):
+    def _extract_xref_ids(self, rconts, xpats, IsoDisplayed):
         '''
         Parse the xref data
         '''
@@ -427,8 +430,9 @@ class creator:
                 rc = "".join([i for s in rc for i in s]) # list of list to str
                 # delete the last dot if apply
                 rc = re.sub(r'\.$','', rc) if rc.endswith('.') else rc
-                # exception
-                rc = rc.replace('-1', '') if xc == self.XID else rc
+                # if the id is the displayec protein. Delete the prefix
+                if rc == IsoDisplayed:
+                    rc = re.sub(r'\-\d*$','', rc)
                 # only add values if exists
                 if rc != '':
                     rcs.append(rc)

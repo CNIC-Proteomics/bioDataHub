@@ -16,6 +16,7 @@ DATE: 2021_04
 
 + The time of execution has been decreased!!
 
++ Fixing a problem with the displayed sequences and the cross-reference identifies.
 
 ___
 ## v1.4

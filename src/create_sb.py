@@ -17,7 +17,7 @@ def main(args):
     ''' Main function'''
             
     logging.info("create db_creator object")
-    w = db.creator(args.species, args.outdir)
+    w = db.creator(args.species, args.outfile)
 
     logging.info("download raw file")
     w.download_raw_dbs()
@@ -42,7 +42,7 @@ Examples:
         ''',
         formatter_class=CustomFormatter )
     parser.add_argument('-s',  '--species', required=True, help='First filter based on the species name')
-    parser.add_argument('-o',  '--outdir', required=True, help='Directory where the database will be saved')
+    parser.add_argument('-o',  '--outfile', required=True, help='Output file')
     parser.add_argument('-v', dest='verbose', action='store_true', help="Increase output verbosity")
     args = parser.parse_args()
 

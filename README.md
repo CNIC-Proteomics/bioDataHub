@@ -17,51 +17,40 @@ Python3 and the following Python packages:
 
 ## Executions
 
-To execute the whole workflow:
+### To execute the whole workflow:
 ```bash
 ./bin/create_db_sb.sh
 ```
-To execute the whole workflow given a specific version.
+
+
+### To execute the whole workflow given a specific version.
 ```bash
 ./bin/create_db_sb.sh 2
 ```
 The above example will save the databases in the "{date}.2" folder
 
 
-The following scripts, download the FASTA sequences from UniProt proteomes and create a file with the system biology data for the given species:
+### The following scripts, download the FASTA sequences determining the source of database, UniProtKB or the UniProt Proteome:
 
-Only SwissProt data
+#### Only SwissProt data
 ```bash
-python src/create_db_sb.py -s human      -o databases -f sw -vv  &> logs/create_db_sb.human.log
-python src/create_db_sb.py -s mouse      -o databases -f sw -vv  &> logs/create_db_sb.mouse.log
-python src/create_db_sb.py -s pig        -o databases -f sw -vv  &> logs/create_db_sb.pig.log
-python src/create_db_sb.py -s rabbit     -o databases -f sw -vv  &> logs/create_db_sb.rabbit.log
-python src/create_db_sb.py -s zebrafish  -o databases -f sw -vv  &> logs/create_db_sb.zebrafish.log
+python src/create_fasta.py -s human  -f pro-sw         -o databases/human_202104_pro-sw.fasta     -vv  &> logs/create_fasta.human.log
 ```
-
-With SwissProt+TrEMBL
+#### With SwissProt+TrEMBL
 ```bash
-python src/create_db_sb.py -s human      -o databases -vv  &> logs/create_db_sb.human.log
-python src/create_db_sb.py -s mouse      -o databases -vv  &> logs/create_db_sb.mouse.log
-python src/create_db_sb.py -s pig        -o databases -vv  &> logs/create_db_sb.pig.log
-python src/create_db_sb.py -s rabbit     -o databases -vv  &> logs/create_db_sb.rabbit.log
-python src/create_db_sb.py -s zebrafish  -o databases -vv  &> logs/create_db_sb.zebrafish.log
+python src/create_fasta.py -s human  -f pro-sw-tr      -o databases/human_202104_pro-sw-tr.fasta  -vv  &> logs/create_fasta.human.log
 ```
-
-Remove duplicated sequences in the FASTA file based on the sorted id's
+#### Remove duplicated sequences in the FASTA file based on the sorted id's
 ```bash
-python src/create_db_sb.py -s human      -o databases -d -vv  &> logs/create_db_sb.human.log
-python src/create_db_sb.py -s mouse      -o databases -d -vv  &> logs/create_db_sb.mouse.log
-python src/create_db_sb.py -s pig        -o databases -d -vv  &> logs/create_db_sb.pig.log
-python src/create_db_sb.py -s rabbit     -o databases -d -vv  &> logs/create_db_sb.rabbit.log
-python src/create_db_sb.py -s zebrafish  -o databases -d -vv  &> logs/create_db_sb.zebrafish.log
+python src/create_fasta.py -s human  -f pro-sw-tr  -d  -o databases/human_202104_pro-sw-tr.fasta  -vv  &> logs/create_fasta.human.log
 ```
 
 
-Add into the crontab
+### The following scripts, create a system biology data with the whole UniProtKB for the given species:
 ```bash
-crontab crontab/crontab_db_sb.sh
+python src/create_sb.py    -s human     -o databases/human_202104.categories.tsv       -vv  &> logs/create_sb.human.log
 ```
+
 
 # DecoyPYrat.v2 - Fast Hybrid Decoy Sequence Database Creation for Proteomic Mass Spectromtery Analyses
 

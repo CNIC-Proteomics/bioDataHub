@@ -1,4 +1,23 @@
 ___
+## v2.0
+```
+DATE: 2021_04
+```
+
++ The program has been divided in two: create_fasta and create_sb
+    - create_fasta, downloads the FASTA file.
+    - create_sb, create the System Biology table.
+    
++ Now you can download the proteins from the Proteome (pro) or the proteins from UniProtKB (uni).
+
++ The system downloads systematically the following databases: ("pro-sw" "pro-sw-tr" "uni-sw" "uni-sw-tr").
+
++ The protein length has been included in the record table.
+
++ The time of execution has been decreased!!
+
+
+___
 ## v1.4
 ```
 DATE: 2021_03

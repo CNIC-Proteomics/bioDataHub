@@ -1,7 +1,6 @@
 #!/usr/bin/bash
 
 # Declare variables
-echo "ARG: ${1}"
 if [[ ! -z "$1" ]]; then
   VERSION=".${1}"
 else
@@ -14,67 +13,59 @@ OUTDIR="${BASEDIR}/${DATE}" # with date folder
 WSDIR="${BASEDIR}/current_release"
 LOGDIR="${CODEDIR}/logs/${DATE}"
 
+TYPE_LIST=("pro-sw" "pro-sw-tr" "uni-sw" "uni-sw-tr")
+SPECIES_LIST=(human mouse rat pig rabbit zebrafish ecoli)
+
 # Function that executes the input command
 run_cmd () {
-  echo "-- $1"  
+  echo "-- $1"
+  echo ""
   eval $1
 }
 
 # prepare workspaces
 mkdir "${LOGDIR}"
 
-# for the following species...
-# create the System biology database
-TYPE_LIST=(sw sw-tr)
+# CREATE FASTA files --------
+
+# for the following databases and species...
 for TYPE in "${TYPE_LIST[@]}"
 do
-  SPECIES_LIST=(human mouse rat pig rabbit zebrafish ecoli)
   for SPECIES in "${SPECIES_LIST[@]}"
   do
     # get local variables
-    LOGFILE="${LOGDIR}/create_db_sb.${SPECIES}-${TYPE}.log"
+    OUTNAME="${SPECIES}_${DATE}_${TYPE}"
+    OUTFILE="${OUTDIR}/${OUTNAME}.fasta"
+    LOGFILE="${LOGDIR}/create_fasta.${OUTNAME}.log"
+
+    OUTFILE_dc="${OUTDIR}/${OUTNAME}.decoy.fasta"
+    OUTFILE_tg="${OUTDIR}/${OUTNAME}.target.fasta"
+    OUTFILE_dc_tg="${OUTDIR}/${OUTNAME}.target-decoy.fasta"
+    LOGFILE_dc_tg="${LOGDIR}/decoyPYrat.${OUTNAME}.log"
+
     # execute commands
-    CMD="time python '${CODEDIR}/src/create_db_sb.py' -s ${SPECIES} -f ${TYPE} -o '${OUTDIR}' -vv  &> '${LOGFILE}' "
-    run_cmd "${CMD}"
+    CMD1="python '${CODEDIR}/src/create_fasta.py' -s ${SPECIES} -f ${TYPE} -o '${OUTFILE}' -vv  &> '${LOGFILE}' "
+    CMD2="python '${CODEDIR}/src/decoyPYrat.v2.py' --output_fasta '${OUTFILE_dc}' --decoy_prefix=DECOY -t '${OUTFILE}.tmp' '${OUTFILE}' &> '${LOGFILE_dc_tg}' ; cat ${OUTFILE_tg} ${OUTFILE_dc} > ${OUTFILE_dc_tg} "
+    run_cmd "${CMD1} ; ${CMD2}" &
   done
 done
 
-# for the following species...
-# create the Target/Decoy database
-for INFILE in $(ls -1 "${OUTDIR}"/*.fasta)
-do
-    # get local variables
-    filename=$(basename "${INFILE}")
-    filename="${filename%.*}"
-    OUTFILE_dc="${OUTDIR}/${filename}.decoy.fasta"
-    OUTFILE_tg="${OUTDIR}/${filename}.target.fasta"
-    OUTFILE="${OUTDIR}/${filename}.target-decoy.fasta"
-    LOGFILE="${LOGDIR}/decoyPYrat.${filename}.log"
-    # execute commands
-    CMD="time python '${CODEDIR}/src/decoyPYrat.v2.py' --output_fasta '${OUTFILE_dc}' --decoy_prefix=DECOY '${INFILE}' &> '${LOGFILE}' && cat ${OUTFILE_tg} ${OUTFILE_dc} > ${OUTFILE}"
-    run_cmd "${CMD}"
-done
+
+# CREATE SYSTEM BIOLOGY files --------
 
 # for the following species...
-# create the relationship file "commentline2category" (the version of protein2category)
-for INFILE in $(ls -1 "${OUTDIR}"/*.categories.tsv)
+for SPECIES in "${SPECIES_LIST[@]}"
 do
-    # get local variables
-    filename=$(basename "${INFILE}")
-    filename="${filename%.categories.tsv}"
-    OUTFILE="${OUTDIR}/${filename}.cat.tsv"
-    LOGFILE="${LOGDIR}/createRels.${filename}.log"
-    # execute commands
-    CMD="time python '${CODEDIR}/src/createRels.v023.py' -vv  -ii '${INFILE}' -ji '${INFILE}' -o '${OUTFILE}' -i 'Comment_Line' -j 'cat_*' -f 'cat_GO_*:EXP,IDA,IPI,IMP,IGI,IEP,HTP,HDA,HMP,HGI,HEP' &> '${LOGFILE}'"
-    run_cmd "${CMD}"
+  # get local variables
+  OUTNAME="${SPECIES}_${DATE}"
+  OUTFILE="${OUTDIR}/${OUTNAME}.categories.tsv"
+  LOGFILE="${LOGDIR}/create_sb.${OUTNAME}.log"
+
+  OUTFILE_cr="${OUTDIR}/${OUTNAME}.cat.tsv"
+  LOGFILE_cr="${LOGDIR}/createRels.${OUTNAME}.log"
+
+  # execute commands
+  CMD1="python '${CODEDIR}/src/create_sb.py' -s ${SPECIES} -o '${OUTFILE}' -vv  &> '${LOGFILE}' "
+  CMD2="python '${CODEDIR}/src/createRels.v0210.py' -vv  -ii '${OUTFILE}' -o '${OUTFILE_cr}' -i 'Comment_Line' -j 'cat_*' &> '${LOGFILE_cr}'"
+  run_cmd "${CMD1} ; ${CMD2}" &
 done
-
-# # Delete the last version
-# mv  "${WSDIR}"  "BAKbefore_${DATE}"
-
-# # prepare workspaces
-# mkdir "${WSDIR}"
-
-# # Copy the new version to the folder
-# cp -r "${OUTDIR}/." "${WSDIR}/."
-

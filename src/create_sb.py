@@ -1,5 +1,7 @@
 #!/usr/bin/python
-import sys, argparse, logging
+import sys
+import argparse
+import logging
 import db
 
 __author__ = 'jmrodriguezc'
@@ -15,10 +17,10 @@ def main(args):
     ''' Main function'''
             
     logging.info("create db_creator object")
-    w = db.creator(args.species, args.outdir, args.filt, args.rem_dup)
+    w = db.creator(args.species, args.outdir)
 
     logging.info("download raw file")
-    w.download_raw_dbs(args.filt)
+    w.download_raw_dbs()
 
     logging.info("create qreport")
     output = w.create_qreport()
@@ -32,17 +34,15 @@ if __name__ == "__main__":
     class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawTextHelpFormatter):
         pass
     parser = argparse.ArgumentParser(
-        description='Create the System Biology database from UniProtKB',
+        description='Create a system biology data with the whole UniProtKB for the given species',
         epilog='''
 Examples:
-    create_db_sb.py -s pig -o test
-    create_db_sb.py -s mouse -f -t gene -o test
+    create_sb.py -s pig    -o test
+    create_sb.py -s mouse  -o test
         ''',
         formatter_class=CustomFormatter )
     parser.add_argument('-s',  '--species', required=True, help='First filter based on the species name')
     parser.add_argument('-o',  '--outdir', required=True, help='Directory where the database will be saved')
-    parser.add_argument('-f',  '--filt',  default="sw-tr", choices=["sw-tr","sw","tr"], help='Directory where the database will be saved')    
-    parser.add_argument('-d',  '--rem_dup', default=False, action='store_true', help="Remove duplicated sequences")
     parser.add_argument('-v', dest='verbose', action='store_true', help="Increase output verbosity")
     args = parser.parse_args()
 

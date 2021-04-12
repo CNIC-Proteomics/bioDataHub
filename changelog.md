@@ -18,6 +18,8 @@ DATE: 2021_04
 
 + Fixing a problem with the displayed sequences and the cross-reference identifies.
 
++ The taxonomy parameter has been included in the URL query.
+
 ___
 ## v1.4
 ```

@@ -20,30 +20,37 @@ class creator:
     SPECIES_LIST = {
         'human': {
             'scientific': 'Homo sapiens',
+            'taxonomy': '9606',
             'proteome': 'UP000005640'
         },
         'mouse': {
             'scientific': 'Mus musculus',
+            'taxonomy': '10090',
             'proteome': 'UP000000589'
         },
         'rat': {
             'scientific': 'Rattus norvegicus',
+            'taxonomy': '10116',
             'proteome': 'UP000002494'
         },
         'pig': {
             'scientific': 'Sus scrofa',
+            'taxonomy': '9823',
             'proteome': 'UP000008227'
         },
         'rabbit': {
             'scientific': 'Oryctolagus cuniculus',
+            'taxonomy': '9986',
             'proteome': 'UP000001811'
         },
         'zebrafish': {
             'scientific': 'Danio rerio',
+            'taxonomy': '7955',
             'proteome': 'UP000000437'
         },
         'ecoli': {
             'scientific': 'Escherichia coli',
+            'taxonomy': '562',
             'proteome': 'UP000000558'
         }
     }
@@ -81,6 +88,7 @@ class creator:
             self.species = species
             self.proteome_id = self.SPECIES_LIST[self.species]['proteome']
             self.scientific = self.SPECIES_LIST[self.species]['scientific']
+            self.taxonomy = self.SPECIES_LIST[self.species]['taxonomy']
         else:
             sys.exit( "ERROR: Species parameter has been not found. Try with: "+", ".join(self.SPECIES_LIST.keys()) )
         
@@ -162,8 +170,9 @@ class creator:
                 url = self.URL_UNIPROT +'query=proteome:'+ self.proteome_id
             else: # by default filter by organism
                 url = self.URL_UNIPROT +'query=organism:'+ self.scientific.replace(" ",'+')
+                if self.taxonomy: url += '&taxonomy:'+self.taxonomy
             if filt and filt.endswith("sw"): # filter by SwissProt
-                url += '&fil=reviewed:yes'            
+                url += '&fil=reviewed:yes'
             url += '&format=fasta'
             logging.info("get "+url+" > "+self.outfile)
             urllib.request.urlretrieve(url, self.outfile)
@@ -182,7 +191,9 @@ class creator:
         '''        
         # UniProt Fasta
         if not os.path.isfile(self.db_fasta):
-            url = self.URL_UNIPROT +'query=organism:'+ self.scientific.replace(" ",'+') +'&format=fasta'
+            url = self.URL_UNIPROT +'query=organism:'+ self.scientific.replace(" ",'+')
+            if self.taxonomy: url += '&taxonomy:'+self.taxonomy
+            url += '&format=fasta'
             logging.info("get "+url+" > "+self.db_fasta)
             urllib.request.urlretrieve(url, self.db_fasta)
         else:
@@ -196,7 +207,9 @@ class creator:
 
         # UniProt Data
         if not os.path.isfile(self.db_uniprot):
-            url = self.URL_UNIPROT +'query=organism:'+ self.scientific.replace(" ",'+') +'&format=txt'
+            url = self.URL_UNIPROT +'query=organism:'+ self.scientific.replace(" ",'+')
+            if self.taxonomy: url += '&taxonomy:'+self.taxonomy
+            url += '&format=txt'
             logging.info("get "+url+" > "+self.db_uniprot)
             urllib.request.urlretrieve(url, self.db_uniprot)
         else:

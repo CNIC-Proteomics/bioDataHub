@@ -169,8 +169,9 @@ class creator:
             if filt and filt.startswith("pro"): # filter by proteome
                 url = self.URL_UNIPROT +'query=proteome:'+ self.proteome_id
             else: # by default filter by organism
-                url = self.URL_UNIPROT +'query=organism:'+ self.scientific.replace(" ",'+')
-                if self.taxonomy: url += '&taxonomy:'+self.taxonomy
+                url = self.URL_UNIPROT +'query='
+                url += 'taxonomy:'+self.taxonomy
+                # url += 'organism:'+ self.scientific.replace(" ",'+')
             if filt and filt.endswith("sw"): # filter by SwissProt
                 url += '&fil=reviewed:yes'
             url += '&format=fasta'
@@ -191,8 +192,9 @@ class creator:
         '''        
         # UniProt Fasta
         if not os.path.isfile(self.db_fasta):
-            url = self.URL_UNIPROT +'query=organism:'+ self.scientific.replace(" ",'+')
-            if self.taxonomy: url += '&taxonomy:'+self.taxonomy
+            url = self.URL_UNIPROT +'query='
+            url += 'taxonomy:'+self.taxonomy
+            # url += 'organism:'+ self.scientific.replace(" ",'+')
             url += '&format=fasta'
             logging.info("get "+url+" > "+self.db_fasta)
             urllib.request.urlretrieve(url, self.db_fasta)
@@ -207,8 +209,9 @@ class creator:
 
         # UniProt Data
         if not os.path.isfile(self.db_uniprot):
-            url = self.URL_UNIPROT +'query=organism:'+ self.scientific.replace(" ",'+')
-            if self.taxonomy: url += '&taxonomy:'+self.taxonomy
+            url = self.URL_UNIPROT +'query='
+            url += 'taxonomy:'+self.taxonomy
+            # url += 'organism:'+ self.scientific.replace(" ",'+')
             url += '&format=txt'
             logging.info("get "+url+" > "+self.db_uniprot)
             urllib.request.urlretrieve(url, self.db_uniprot)

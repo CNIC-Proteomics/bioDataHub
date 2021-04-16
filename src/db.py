@@ -115,6 +115,7 @@ class creator:
         # self.db_uniprot = self.TMP_DIR +'/../test/test_2656.dat'
         # self.db_uniprot = self.TMP_DIR +'/../test/test_1033.dat'
         # self.db_uniprot = self.TMP_DIR +'/../test/test_to_solve_duplication.dat'
+        # self.db_uniprot = self.TMP_DIR +'/../test/P60880.txt'
         
         self.db_fasta = self.TMP_DIR +'/proteins.fasta'
         self.db_corum   = self.TMP_DIR +'/'+ ".".join(os.path.basename( self.URL_CORUM ).split(".")[:-1]) # get the filename from the URL (without 'zip' extension)
@@ -169,9 +170,7 @@ class creator:
             if filt and filt.startswith("pro"): # filter by proteome
                 url = self.URL_UNIPROT +'query=proteome:'+ self.proteome_id
             else: # by default filter by organism
-                url = self.URL_UNIPROT +'query='
-                url += 'taxonomy:'+self.taxonomy
-                # url += 'organism:'+ self.scientific.replace(" ",'+')
+                url = self.URL_UNIPROT +'query='+ 'organism:'+self.species+ '+taxonomy:'+self.taxonomy
             if filt and filt.endswith("sw"): # filter by SwissProt
                 url += '&fil=reviewed:yes'
             url += '&format=fasta'
@@ -192,9 +191,7 @@ class creator:
         '''        
         # UniProt Fasta
         if not os.path.isfile(self.db_fasta):
-            url = self.URL_UNIPROT +'query='
-            url += 'taxonomy:'+self.taxonomy
-            # url += 'organism:'+ self.scientific.replace(" ",'+')
+            url = self.URL_UNIPROT +'query='+ 'organism:'+self.species+ '+taxonomy:'+self.taxonomy
             url += '&format=fasta'
             logging.info("get "+url+" > "+self.db_fasta)
             urllib.request.urlretrieve(url, self.db_fasta)
@@ -209,9 +206,7 @@ class creator:
 
         # UniProt Data
         if not os.path.isfile(self.db_uniprot):
-            url = self.URL_UNIPROT +'query='
-            url += 'taxonomy:'+self.taxonomy
-            # url += 'organism:'+ self.scientific.replace(" ",'+')
+            url = self.URL_UNIPROT +'query='+ 'organism:'+self.species+ '+taxonomy:'+self.taxonomy
             url += '&format=txt'
             logging.info("get "+url+" > "+self.db_uniprot)
             urllib.request.urlretrieve(url, self.db_uniprot)
@@ -317,11 +312,14 @@ class creator:
         altprod = [c for c in record.comments if 'ALTERNATIVE PRODUCTS:' in c]
         IsoIds = [acc]
         IsoDisplayed = None
-        if altprod:            
-            i = re.findall(r'IsoId=([^\;|\,]*)[\;|\,]+\s*Sequence=VSP_', altprod[0], re.I | re.M | re.DOTALL)
-            IsoIds += i
-            ii = re.findall(r'IsoId=([^\;|\,]*)[\;|\,]+\s*Sequence=Displayed', altprod[0], re.I | re.M | re.DOTALL)
-            if ii: IsoDisplayed = ii[0]
+        if altprod:
+            ap = re.split(r'\s*;\s*', altprod[0])
+            x = [ ( a.replace('IsoId=','') , ap[i+1].replace('Sequence=','') ) for i,a in enumerate(ap) if a.startswith('IsoId=')] # list of tuples (isoId=,Sequence=)
+            x = [ ( re.match(r'[^,]*',y[0])[0], re.match(r'[^,]*',y[1])[0] ) for y in x ] # if multiple Iso ids, get the fisrt id until comma
+            y = [acc]
+            y += [ i[0] for i in x if i[1].startswith('VSP_') ] # get the list of 
+            z =  [ i[0] for i in x if i[1].startswith('Displayed') ]
+            if z: IsoDisplayed = z[0]
         # for each isoform id
         # get the comment and length of isoform
         comms = []

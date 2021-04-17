@@ -18,7 +18,7 @@ DATE: 2021_04
 
 + Fixing a problem with the displayed sequences and the cross-reference identifies.
 
-+ The taxonomy is the main parameter in the query of URL.
++ The taxonomy and the name of species are the main parameter in the query of URL.
 
 ___
 ## v1.4

@@ -111,10 +111,10 @@ class creator:
         self.outfile = o
 
         # define output files for "create_sb"
-        self.db_uniprot = self.TMP_DIR +'/uniprot.dat'
+        # self.db_uniprot = self.TMP_DIR +'/uniprot.dat'
         # self.db_uniprot = self.TMP_DIR +'/../test/test_2656.dat'
         # self.db_uniprot = self.TMP_DIR +'/../test/test_1033.dat'
-        # self.db_uniprot = self.TMP_DIR +'/../test/test_to_solve_duplication.dat'
+        self.db_uniprot = self.TMP_DIR +'/../test/test_to_solve_duplication.dat'
         # self.db_uniprot = self.TMP_DIR +'/../test/P60880.txt'
         
         self.db_fasta = self.TMP_DIR +'/proteins.fasta'
@@ -316,8 +316,7 @@ class creator:
             ap = re.split(r'\s*;\s*', altprod[0])
             x = [ ( a.replace('IsoId=','') , ap[i+1].replace('Sequence=','') ) for i,a in enumerate(ap) if a.startswith('IsoId=')] # list of tuples (isoId=,Sequence=)
             x = [ ( re.match(r'[^,]*',y[0])[0], re.match(r'[^,]*',y[1])[0] ) for y in x ] # if multiple Iso ids, get the fisrt id until comma
-            y = [acc]
-            y += [ i[0] for i in x if i[1].startswith('VSP_') ] # get the list of 
+            IsoIds += [ i[0] for i in x if i[1].startswith('VSP_') ] # get the list of 
             z =  [ i[0] for i in x if i[1].startswith('Displayed') ]
             if z: IsoDisplayed = z[0]
         # for each isoform id

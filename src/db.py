@@ -111,10 +111,10 @@ class creator:
         self.outfile = o
 
         # define output files for "create_sb"
-        # self.db_uniprot = self.TMP_DIR +'/uniprot.dat'
+        self.db_uniprot = self.TMP_DIR +'/uniprot.dat'
         # self.db_uniprot = self.TMP_DIR +'/../test/test_2656.dat'
         # self.db_uniprot = self.TMP_DIR +'/../test/test_1033.dat'
-        self.db_uniprot = self.TMP_DIR +'/../test/test_to_solve_duplication.dat'
+        # self.db_uniprot = self.TMP_DIR +'/../test/test_to_solve_duplication.dat'
         # self.db_uniprot = self.TMP_DIR +'/../test/P60880.txt'
         
         self.db_fasta = self.TMP_DIR +'/proteins.fasta'

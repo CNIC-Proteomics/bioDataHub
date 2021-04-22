@@ -166,7 +166,7 @@ class creator:
         Download the fasta file
         '''        
         # filter by SwissProt (Reviwed) if apply
-        if not os.path.isfile(self.db_uniprot):
+        if not os.path.isfile(self.outfile):
             if filt and filt.startswith("pro"): # filter by proteome
                 url = self.URL_UNIPROT +'query=proteome:'+ self.proteome_id
             else: # by default filter by organism

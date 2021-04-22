@@ -115,7 +115,7 @@ class creator:
         # self.db_uniprot = self.TMP_DIR +'/../test/test_2656.dat'
         # self.db_uniprot = self.TMP_DIR +'/../test/test_1033.dat'
         # self.db_uniprot = self.TMP_DIR +'/../test/test_to_solve_duplication.dat'
-        # self.db_uniprot = self.TMP_DIR +'/../test/P60880.txt'
+        # self.db_uniprot = self.TMP_DIR +'/../test/V9HWB4.txt'
         
         self.db_fasta = self.TMP_DIR +'/proteins.fasta'
         self.db_corum   = self.TMP_DIR +'/'+ ".".join(os.path.basename( self.URL_CORUM ).split(".")[:-1]) # get the filename from the URL (without 'zip' extension)
@@ -301,7 +301,7 @@ class creator:
         # extract main info ---
         name = record.entry_name
         acc = record.accessions[0]
-        pattern = re.search(r'Name=(\w*)', record.gene_name, re.I | re.M)
+        pattern = re.search(r'Name=([^\s|\;]*)', record.gene_name, re.I | re.M)
         gene = pattern[1] if pattern else record.gene_name  
         pattern = re.search(r'[RecName|SubName]: Full=([^\;|\{]*)', record.description, re.I | re.M)
         dsc = pattern[1] if pattern else record.description

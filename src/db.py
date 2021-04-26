@@ -61,7 +61,7 @@ class creator:
     # Xreferences terms of Protein
     XTERMS = [
         ('Ensembl',  [('xref_Ensembl_protId','(ENS\w*P\d+[.]?\d*)'),('xref_Ensembl_transcId','(ENS\w*T\d+[.]?\d*)'),('xref_Ensembl_GeneId','(ENS\w*G\d+[.]?\d*)'),('Protein','\[([^\]]*)\]')]),
-        ('RefSeq',   [('xref_RefSeq_protId','(NP_\d+[.]?\d*)'),('xref_RefSeq_transcId','(NM_\d+[.]?\d*)'),('Protein','\[([^\]]*)\]')]),
+        ('RefSeq',   [('xref_RefSeq_protId','(NP_\d+[.]?\d*|XP_\d+[.]?\d*)'),('xref_RefSeq_transcId','(NM_\d+[.]?\d*|XM_\d+[.]?\d*)'),('Protein','\[([^\]]*)\]')]),
         ('CCDS',     [('xref_CCDS','(CCDS\d+[.]?\d*)'),('Protein','\[([^\]]*)\]')]),
     ]
     # Category terms of Protein
@@ -112,10 +112,7 @@ class creator:
 
         # define output files for "create_sb"
         self.db_uniprot = self.TMP_DIR +'/uniprot.dat'
-        # self.db_uniprot = self.TMP_DIR +'/../test/test_2656.dat'
-        # self.db_uniprot = self.TMP_DIR +'/../test/test_1033.dat'
-        # self.db_uniprot = self.TMP_DIR +'/../test/test_to_solve_duplication.dat'
-        # self.db_uniprot = self.TMP_DIR +'/../test/V9HWB4.txt'
+        # self.db_uniprot = self.TMP_DIR +'/../../../test/test_1033.dat'
         
         self.db_fasta = self.TMP_DIR +'/proteins.fasta'
         self.db_corum   = self.TMP_DIR +'/'+ ".".join(os.path.basename( self.URL_CORUM ).split(".")[:-1]) # get the filename from the URL (without 'zip' extension)
@@ -316,7 +313,7 @@ class creator:
             ap = re.split(r'\s*;\s*', altprod[0])
             x = [ ( a.replace('IsoId=','') , ap[i+1].replace('Sequence=','') ) for i,a in enumerate(ap) if a.startswith('IsoId=')] # list of tuples (isoId=,Sequence=)
             x = [ ( re.match(r'[^,]*',y[0])[0], re.match(r'[^,]*',y[1])[0] ) for y in x ] # if multiple Iso ids, get the fisrt id until comma
-            IsoIds += [ i[0] for i in x if i[1].startswith('VSP_') ] # get the list of 
+            IsoIds += [ i[0] for i in x if i[1].startswith('VSP_') ] # get the list of
             z =  [ i[0] for i in x if i[1].startswith('Displayed') ]
             if z: IsoDisplayed = z[0]
         # for each isoform id
@@ -328,8 +325,7 @@ class creator:
             c = self.db_fasta_seqio[i]['comm'] if i in self.db_fasta_seqio else ''
             comms.append(c)
             l = self.db_fasta_seqio[i]['len'] if i in self.db_fasta_seqio else ''
-            lengths.append(l)
-        
+            lengths.append(l)        
             
         
         # create a dataframe with the Metadata information ---
@@ -357,11 +353,37 @@ class creator:
             if xdb in rcross:
                 rconts = rcross[xdb]
                 if   xdb == "Ensembl":
-                    (xcols, xvals) = self._extract_xref_ids(rconts, xpats, IsoDisplayed)
+                    # (xcols, xvals) = self._extract_xref_ids(rconts, xpats, IsoDisplayed)
+                    xcols = [x[0] for x in xpats]
+                    for rcont in rconts:
+                        xp = rcont[1]
+                        xt = rcont[0]
+                        # extract the isoform id from the last tuple (gene+isoform)
+                        y = re.findall(r"\[([^\]]*)\]", rcont[2])
+                        i = acc if not y or y[0] == IsoDisplayed else y[0]
+                        # remove the isoform id from the last tuple
+                        xg = re.sub(r"\.\s+.*$",'',rcont[2])                        
+                        xvals.append([xp,xt,xg,i])                            
                 elif xdb == "RefSeq":
-                    (xcols, xvals) = self._extract_xref_ids(rconts, xpats, IsoDisplayed)
+                    # (xcols, xvals) = self._extract_xref_ids(rconts, xpats, IsoDisplayed)
+                    xcols = [x[0] for x in xpats]
+                    for rcont in rconts:
+                        xp = rcont[0]
+                        # extract the isoform id from the last tuple (transc+isoform)
+                        y = re.findall(r"\[([^\]]*)\]", rcont[1])
+                        i = acc if not y or y[0] == IsoDisplayed else y[0]
+                        # remove the isoform id from the last tuple
+                        xt = re.sub(r"\.\s+.*$",'',rcont[1])                
+                        xvals.append([xp,xt,i])
                 elif xdb == "CCDS":
-                    (xcols, xvals) = self._extract_xref_ids(rconts, xpats, IsoDisplayed)
+                    # (xcols, xvals) = self._extract_xref_ids(rconts, xpats, IsoDisplayed)
+                    xcols = [x[0] for x in xpats]
+                    for rcont in rconts:
+                        xp = rcont[0]
+                        # extract the isoform id from the last tuple
+                        y = re.findall(r"\[([^\]]*)\]", rcont[1])
+                        i = acc if not y or y[0] == IsoDisplayed else y[0]
+                        xvals.append([xp,i])
             else:
                 # create empty dict with the name of colum
                 for xc,xv in xpats:
@@ -426,39 +448,39 @@ class creator:
                         
         return df1
     
-    def _extract_xref_ids(self, rconts, xpats, IsoDisplayed):
-        '''
-        Parse the xref data
-        '''
-        xcols = []
-        xvals = []
-        # go through all columns of xterms
-        for xpat in xpats:
-            xc = xpat[0] # column name
-            xp = xpat[1] # pattern
-            # extract the record value that achives the pattern
-            rcs = []
-            for rcont in rconts:
-                rc = [ re.findall(rf"{xp}", c) for c in rcont ]
-                rc = "".join([i for s in rc for i in s]) # list of list to str
-                # delete the last dot if apply
-                rc = re.sub(r'\.$','', rc) if rc.endswith('.') else rc
-                # if the id is the displayec protein. Delete the prefix
-                if rc == IsoDisplayed:
-                    rc = re.sub(r'\-\d*$','', rc)
-                # only add values if exists
-                if rc != '':
-                    rcs.append(rc)
-            # create list of cols and values
-            if rcs:
-                xcols.append(xc)
-                xvals.append(rcs)
-            else:
-                xcols.append(xc)
-                xvals.append([np.nan])
-        # transpose list of lists
-        xvals = list(map(list, zip(*xvals)))
-        return (xcols, xvals)
+    # def _extract_xref_ids(self, rconts, xpats, IsoDisplayed):
+    #     '''
+    #     Parse the xref data
+    #     '''
+    #     xcols = []
+    #     xvals = []
+    #     # go through all columns of xterms
+    #     for xpat in xpats:
+    #         xc = xpat[0] # column name
+    #         xp = xpat[1] # pattern
+    #         # extract the record value that achives the pattern
+    #         rcs = []
+    #         for rcont in rconts:
+    #             rc = [ re.findall(rf"{xp}", c) for c in rcont ]
+    #             rc = "".join([i for s in rc for i in s]) # list of list to str
+    #             # delete the last dot if apply
+    #             rc = re.sub(r'\.$','', rc) if rc.endswith('.') else rc
+    #             # if the id is the displayec protein. Delete the prefix
+    #             if rc == IsoDisplayed:
+    #                 rc = re.sub(r'\-\d*$','', rc)
+    #             # only add values if exists
+    #             if rc != '':
+    #                 rcs.append(rc)
+    #         # create list of cols and values
+    #         if rcs:
+    #             xcols.append(xc)
+    #             xvals.append(rcs)
+    #         else:
+    #             xcols.append(xc)
+    #             xvals.append([np.nan])
+    #     # transpose list of lists
+    #     xvals = list(map(list, zip(*xvals)))
+    #     return (xcols, xvals)
 
     def _extract_cat_go(self, rconts, xpats):
         '''

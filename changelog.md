@@ -6,6 +6,8 @@ DATE: 2021_04.1
 
 + Fixing a bug getting the gene name.
 
++ Fixing a bug getting the cross-references.
+
 ___
 ## v2.0
 ```

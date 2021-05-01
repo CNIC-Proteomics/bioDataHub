@@ -1,4 +1,14 @@
 ___
+## v2.2
+```
+DATE: 2021_04.2
+```
+
++ Change the format GO categories based on the evidences codes.
+
++ Rewrite the obsolete code in the calculation of cross-references.
+
+___
 ## v2.1
 ```
 DATE: 2021_04.1

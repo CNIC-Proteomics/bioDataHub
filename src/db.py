@@ -60,20 +60,20 @@ class creator:
     META = ['xref_UniProt_Name','Protein','Gene','Species','Length','Description','Comment_Line','prot_UniProt_Class']
     # Xreferences terms of Protein
     XTERMS = [
-        ('Ensembl',  [('xref_Ensembl_protId','(ENS\w*P\d+[.]?\d*)'),('xref_Ensembl_transcId','(ENS\w*T\d+[.]?\d*)'),('xref_Ensembl_GeneId','(ENS\w*G\d+[.]?\d*)'),('Protein','\[([^\]]*)\]')]),
-        ('RefSeq',   [('xref_RefSeq_protId','(NP_\d+[.]?\d*|XP_\d+[.]?\d*)'),('xref_RefSeq_transcId','(NM_\d+[.]?\d*|XM_\d+[.]?\d*)'),('Protein','\[([^\]]*)\]')]),
-        ('CCDS',     [('xref_CCDS','(CCDS\d+[.]?\d*)'),('Protein','\[([^\]]*)\]')]),
+        ('Ensembl',  ['xref_Ensembl_protId','xref_Ensembl_transcId','xref_Ensembl_GeneId','Protein']),
+        ('RefSeq',   ['xref_RefSeq_protId','xref_RefSeq_transcId','Protein']),
+        ('CCDS',     ['xref_CCDS','Protein'])
     ]
     # Category terms of Protein
     CTERMS = [
-        ('GO',       [('cat_GO_C','^C:'),('cat_GO_F','^F:'),('cat_GO_P','^P:')]),
+        ('GO',       [('cat_GO_C','C'),('cat_GO_F','F'),('cat_GO_P','P')]),
         ('KEGG',     [('cat_KEGG','')]),
         ('PANTHER',  [('cat_PANTHER','')]),
         ('Reactome', [('cat_Reactome','')]),
         ('CORUM',    [('cat_CORUM','')]),
         ('DrugBank', [('cat_DrugBank','')])
     ]
-    HEADERS = [ h for h in META] + [ h[0] for i in XTERMS for h in i[1] if h[0] != 'Protein' ] + [ h[0] for i in CTERMS for h in i[1] if h[0] != 'xref_UniProt_Acc' ]
+    HEADERS = [ h for h in META] + [ h for i in XTERMS for h in i[1][:-1] ] + [ h[0] for i in CTERMS for h in i[1] ]
     TIME = datetime.datetime.now().strftime("%Y%m")
 
 
@@ -348,13 +348,11 @@ class creator:
         # extract the xreference data ---
         for terms in self.XTERMS:
             xdb = terms[0]
-            xpats = terms[1]
-            xcols,xvals = [],[]
+            xcols = terms[1]
+            xvals = []
             if xdb in rcross:
                 rconts = rcross[xdb]
                 if   xdb == "Ensembl":
-                    # (xcols, xvals) = self._extract_xref_ids(rconts, xpats, IsoDisplayed)
-                    xcols = [x[0] for x in xpats]
                     for rcont in rconts:
                         xp = rcont[1]
                         xt = rcont[0]
@@ -365,8 +363,6 @@ class creator:
                         xg = re.sub(r"\.\s+.*$",'',rcont[2])                        
                         xvals.append([xp,xt,xg,i])                            
                 elif xdb == "RefSeq":
-                    # (xcols, xvals) = self._extract_xref_ids(rconts, xpats, IsoDisplayed)
-                    xcols = [x[0] for x in xpats]
                     for rcont in rconts:
                         xp = rcont[0]
                         # extract the isoform id from the last tuple (transc+isoform)
@@ -376,8 +372,6 @@ class creator:
                         xt = re.sub(r"\.\s+.*$",'',rcont[1])                
                         xvals.append([xp,xt,i])
                 elif xdb == "CCDS":
-                    # (xcols, xvals) = self._extract_xref_ids(rconts, xpats, IsoDisplayed)
-                    xcols = [x[0] for x in xpats]
                     for rcont in rconts:
                         xp = rcont[0]
                         # extract the isoform id from the last tuple
@@ -386,9 +380,7 @@ class creator:
                         xvals.append([xp,i])
             else:
                 # create empty dict with the name of colum
-                for xc,xv in xpats:
-                    xcols.append(xc)
-                    xvals.append([np.nan])
+                xvals = [[np.nan] for x in xcols]
                 xvals = list(map(list, zip(*xvals)))
             # create dataframe with the Xreferece information
             df2 = pd.DataFrame(columns=xcols, data=xvals)
@@ -448,62 +440,34 @@ class creator:
                         
         return df1
     
-    # def _extract_xref_ids(self, rconts, xpats, IsoDisplayed):
-    #     '''
-    #     Parse the xref data
-    #     '''
-    #     xcols = []
-    #     xvals = []
-    #     # go through all columns of xterms
-    #     for xpat in xpats:
-    #         xc = xpat[0] # column name
-    #         xp = xpat[1] # pattern
-    #         # extract the record value that achives the pattern
-    #         rcs = []
-    #         for rcont in rconts:
-    #             rc = [ re.findall(rf"{xp}", c) for c in rcont ]
-    #             rc = "".join([i for s in rc for i in s]) # list of list to str
-    #             # delete the last dot if apply
-    #             rc = re.sub(r'\.$','', rc) if rc.endswith('.') else rc
-    #             # if the id is the displayec protein. Delete the prefix
-    #             if rc == IsoDisplayed:
-    #                 rc = re.sub(r'\-\d*$','', rc)
-    #             # only add values if exists
-    #             if rc != '':
-    #                 rcs.append(rc)
-    #         # create list of cols and values
-    #         if rcs:
-    #             xcols.append(xc)
-    #             xvals.append(rcs)
-    #         else:
-    #             xcols.append(xc)
-    #             xvals.append([np.nan])
-    #     # transpose list of lists
-    #     xvals = list(map(list, zip(*xvals)))
-    #     return (xcols, xvals)
-
     def _extract_cat_go(self, rconts, xpats):
         '''
-        Parse the xref data
+        Parse the GO record
         '''
         xcols = []
         xvals = []
+        # create a dict based on the GO type and the evidence codes as keys
+        # rconts = [('GO:0016021', 'C:integral component of membrane', 'IEA:UniProtKB-KW')
+        rcs = {}
+        for rcont in rconts:
+            g = rcont[1].split(':')[0]
+            c = rcont[2].split(':')[0]
+            if not g in rcs: rcs[g] = {}
+            
+            if c in rcs[g]:
+                rcs[g][c].append(f"{rcont[0]}>{rcont[1]}|{rcont[2]}") 
+            else:
+                rcs[g][c] = [f"{rcont[0]}>{rcont[1]}|{rcont[2]}"]
         # go through all columns of xterms
         for xpat in xpats:
             xc = xpat[0] # column name
-            xp = xpat[1] # pattern
-            # extract the record value that achives the pattern
-            rcs = []
-            for rcont in rconts:
-                rc = [ rcont for c in rcont if re.search(rf"{xp}", c) ]
-                if rc:
-                    rc = rc[0] # first elem of comprehension list
-                    rcs.append(rc)
+            g = xpat[1] # go type
             # create list of cols and values
-            if rcs:
-                rcs = ";".join([f"{c[0]}>{c[1]}|{c[2]}" for c in rcs])
+            if g in rcs:
+                z = rcs[g]
+                r = ",".join([ f"{c}:[{';'.join(v)}]" for c,v in z.items() ])
                 xcols.append(xc)
-                xvals.append([rcs])
+                xvals.append([r])
             else:
                 xcols.append(xc)
                 xvals.append([np.nan])
@@ -513,7 +477,7 @@ class creator:
 
     def _extract_cat_kegg(self, rconts, xpats):
         '''
-        Parse the raw database file
+        Parse the KEGG record
         '''
         xcols = []
         xvals = []
@@ -569,7 +533,7 @@ class creator:
 
     def _extract_cat_panther(self, df, rconts, xpats, acc):
         '''
-        Parse the raw database file
+        Parse the PANTHER record
         '''
         xcols = []
         xvals = []
@@ -583,11 +547,7 @@ class creator:
                 pass
             except Exception:
                 rcs = ''
-                pass
-            
-            # if datatxt:
-            #     pattern = re.search(rf"UniProtKB={acc}\t*([^\t]*)\t*([^\t]*)", datatxt, re.I | re.M)
-            #     rcs += f"{pattern[1]}>{pattern[2]}" if pattern else ''
+                pass            
             # otherwise, we use the information from given records
             if rcs == '':
                 rcs = ";".join([x[0] for x in rconts])
@@ -604,7 +564,7 @@ class creator:
 
     def _extract_cat_reactome(self, rconts, xpats):
         '''
-        Parse the rcont data
+        Parse the Reactome record
         '''
         xcols = []
         xvals = []
@@ -633,7 +593,7 @@ class creator:
 
     def _extract_cat_corum(self, datatxt, xpats, acc):
         '''
-        Parse the raw database file
+        Parse the Corum record
         '''
         xcols = []
         xvals = []
@@ -660,7 +620,7 @@ class creator:
 
     def _extract_cat_drugbank(self, rconts, xpats):
         '''
-        Parse the rcont data
+        Parse the DrugBank record
         '''
         xcols = []
         xvals = []

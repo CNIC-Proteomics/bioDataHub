@@ -360,7 +360,12 @@ class creator:
                         y = re.findall(r"\[([^\]]*)\]", rcont[2])
                         i = acc if not y or y[0] == IsoDisplayed else y[0]
                         # remove the isoform id from the last tuple
-                        xg = re.sub(r"\.\s+.*$",'',rcont[2])                        
+                        xg = re.sub(r"\.\s+.*$",'',rcont[2])
+                        # remote the version in the identifiers
+                        xp = re.sub(r"\.\d+$",'', xp)
+                        xt = re.sub(r"\.\d+$",'', xt)
+                        xg = re.sub(r"\.\d+$",'', xg)
+                        # append
                         xvals.append([xp,xt,xg,i])                            
                 elif xdb == "RefSeq":
                     for rcont in rconts:
@@ -369,7 +374,11 @@ class creator:
                         y = re.findall(r"\[([^\]]*)\]", rcont[1])
                         i = acc if not y or y[0] == IsoDisplayed else y[0]
                         # remove the isoform id from the last tuple
-                        xt = re.sub(r"\.\s+.*$",'',rcont[1])                
+                        xt = re.sub(r"\.\s+.*$",'',rcont[1])
+                        # remote the version in the identifiers
+                        xp = re.sub(r"\.\d+$",'', xp)
+                        xt = re.sub(r"\.\d+$",'', xt)
+                        # append
                         xvals.append([xp,xt,i])
                 elif xdb == "CCDS":
                     for rcont in rconts:

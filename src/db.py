@@ -71,7 +71,7 @@ class creator:
         ('PANTHER',  [('cat_PANTHER','')]),
         ('Reactome', [('cat_Reactome','')]),
         ('CORUM',    [('cat_CORUM','')]),
-        ('DrugBank', [('cat_DrugBank','')])
+        # ('DrugBank', [('cat_DrugBank','')]) # DrugBank is disabled
     ]
     HEADERS = [ h for h in META] + [ h for i in XTERMS for h in i[1][:-1] ] + [ h[0] for i in CTERMS for h in i[1] ]
     TIME = datetime.datetime.now().strftime("%Y%m")
@@ -113,6 +113,7 @@ class creator:
         # define output files for "create_sb"
         self.db_uniprot = self.TMP_DIR +'/uniprot.dat'
         # self.db_uniprot = self.TMP_DIR +'/../../../test/test_1033.dat'
+        
         
         self.db_fasta = self.TMP_DIR +'/proteins.fasta'
         self.db_corum   = self.TMP_DIR +'/'+ ".".join(os.path.basename( self.URL_CORUM ).split(".")[:-1]) # get the filename from the URL (without 'zip' extension)
@@ -515,14 +516,23 @@ class creator:
                             with open(of2, 'w') as f:
                                 f.write(record)
                         if record:
-                            pattern = re.search(r'DEFINITION\s*([^\n]*)', record, re.I | re.M)
-                            rc += pattern[1] if pattern else ''
-                            pattern = re.search(r'PATHWAY\s*([\w\W]*)MODULE', record, re.I | re.M)
-                            rc += "|"+re.sub(r'\s*\n\s*','|', pattern[1]) if pattern else ''
-                            rc = re.sub(r'[-|\|]*\s*$','', rc) # delete - or | at the end of string
-                            rc = f"{id}>{rc}"
-                            with open(of, 'w') as f:
-                                f.write(rc)
+                            pattern = re.search(r'(PATHWAY\s*[\w\W]*)', record, re.I | re.M)
+                            if pattern:
+                                for m in pattern[1].split('\n'):
+                                    if m.startswith('PATHWAY'):
+                                        m = re.sub('PATHWAY\s*','',m).strip()
+                                        ms = re.split('\s+', m, 1) # split only for the first space
+                                        rc += f"{ms[0]}>{''.join(ms[1:])};"
+                                    elif m.startswith(' '):
+                                        m = re.sub('^\s*','',m).strip()
+                                        ms = re.split('\s+', m, 1) # split only for the first space
+                                        rc += f"{ms[0]}>{''.join(ms[1:])};"
+                                    else:
+                                        break
+                            if rc != '':
+                                rc = re.sub(r'\;$','', rc) # delete ; at the end of string
+                                with open(of, 'w') as f:
+                                    f.write(rc)
                     rcs.append(rc)
                         
                     pass
@@ -551,7 +561,8 @@ class creator:
             xc = xpat[0] # column name
             # extract the information from the given UniProt accession
             try:
-                x = df[df[1] == acc][[3,5]].values.tolist()[0]
+                x = df[df[1] == acc][[3,4]].values.tolist()[0] # get the panther id and family description
+                x[0] = re.sub('\:.*$','',x[0]) # remove the subfamily id
                 rcs = f"{x[0]}>{x[1]}"
                 pass
             except Exception:

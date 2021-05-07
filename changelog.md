@@ -1,4 +1,16 @@
 ___
+## v2.3
+```
+DATE: 2021_05
+```
+
++ DrugBank is disabled.
+
++ Retrieve the PANTHER id (without subfamily id) and the Family description
+
++ Retrieve the KEGG Pathways.
+
+___
 ## v2.2
 ```
 DATE: 2021_05

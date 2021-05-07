@@ -112,8 +112,7 @@ class creator:
 
         # define output files for "create_sb"
         self.db_uniprot = self.TMP_DIR +'/uniprot.dat'
-        # self.db_uniprot = self.TMP_DIR +'/../../../test/test_1033.dat'
-        
+        # self.db_uniprot = self.TMP_DIR +'/../../../test/test_1033.dat'        
         
         self.db_fasta = self.TMP_DIR +'/proteins.fasta'
         self.db_corum   = self.TMP_DIR +'/'+ ".".join(os.path.basename( self.URL_CORUM ).split(".")[:-1]) # get the filename from the URL (without 'zip' extension)
@@ -597,6 +596,7 @@ class creator:
             for rcont in rconts:
                 id = rcont[0]
                 dsc = "|".join(rcont[1:])
+                dsc = re.sub(r'\s*\[[^\]]*\]\s*$','',dsc)
                 rc = f"{id}>{dsc}"
                 rcs.append(rc)
             # create list of cols and values

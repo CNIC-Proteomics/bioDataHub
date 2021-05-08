@@ -66,6 +66,6 @@ do
 
   # execute commands
   CMD1="python '${CODEDIR}/src/create_sb.py' -s ${SPECIES} -o '${OUTFILE}' -vv  &> '${LOGFILE}' "
-  CMD2="python '${CODEDIR}/src/createRels.v0210.py' -vv  -ii '${OUTFILE}' -o '${OUTFILE_cr}' -i 'Comment_Line' -j 'cat_*' &> '${LOGFILE_cr}'"
+  CMD2="python '${CODEDIR}/src/createRels.v0211.py' -vv  -ii '${OUTFILE}' -o '${OUTFILE_cr}' -i 'Comment_Line' -j 'cat_*' &> '${LOGFILE_cr}'"
   run_cmd "${CMD1} ; ${CMD2}" &
 done

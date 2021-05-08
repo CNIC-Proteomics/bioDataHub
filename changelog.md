@@ -10,6 +10,8 @@ DATE: 2021_05
 
 + Retrieve the KEGG Pathways.
 
++ Include createRels programa version 0.2.11
+
 ___
 ## v2.2
 ```

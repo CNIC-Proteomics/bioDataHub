@@ -71,6 +71,7 @@ class creator:
         ('PANTHER',  [('cat_PANTHER','')]),
         ('Reactome', [('cat_Reactome','')]),
         ('CORUM',    [('cat_CORUM','')]),
+        ('MIM',      [('cat_MIM','')]),
         # ('DrugBank', [('cat_DrugBank','')]) # DrugBank is disabled
     ]
     HEADERS = [ h for h in META] + [ h for i in XTERMS for h in i[1][:-1] ] + [ h[0] for i in CTERMS for h in i[1] ]
@@ -112,7 +113,7 @@ class creator:
 
         # define output files for "create_sb"
         self.db_uniprot = self.TMP_DIR +'/uniprot.dat'
-        # self.db_uniprot = self.TMP_DIR +'/../../../test/test_1033.dat'        
+        # self.db_uniprot = self.TMP_DIR +'/../../../test/test_1033.dat'
         
         self.db_fasta = self.TMP_DIR +'/proteins.fasta'
         self.db_corum   = self.TMP_DIR +'/'+ ".".join(os.path.basename( self.URL_CORUM ).split(".")[:-1]) # get the filename from the URL (without 'zip' extension)
@@ -429,6 +430,8 @@ class creator:
                     (xcols, xvals) = self._extract_cat_reactome(rconts, xpats)
                 elif xdb == "CORUM":
                     (xcols, xvals) = self._extract_cat_corum(corum_json, xpats, acc)
+                elif xdb == "MIM":
+                    (xcols, xvals) = self._extract_cat_mim(record.comments, rconts, xpats)
                 elif xdb == "DrugBank":
                     (xcols, xvals) = self._extract_cat_drugbank(rconts, xpats)
             else:
@@ -457,24 +460,25 @@ class creator:
         xvals = []
         # create a dict based on the GO type and the evidence codes as keys
         # rconts = [('GO:0016021', 'C:integral component of membrane', 'IEA:UniProtKB-KW')
+        # filters the GO terms by:        
+        flts = ['EXP','IDA','IPI','IMP','IGI','IEP','HTP','HDA','HMP','HGI','HEP','IBA','IBD','IKR','IRD']
         rcs = {}
         for rcont in rconts:
             g = rcont[1].split(':')[0]
             c = rcont[2].split(':')[0]
-            if not g in rcs: rcs[g] = {}
-            
-            if c in rcs[g]:
-                rcs[g][c].append(f"{rcont[0]}>{rcont[1]}|{rcont[2]}") 
-            else:
-                rcs[g][c] = [f"{rcont[0]}>{rcont[1]}|{rcont[2]}"]
+            if c in flts:
+                s = rcont[0]+'>'+rcont[1].replace(';',',')+'|'+rcont[2]
+                if g in rcs:
+                    rcs[g] += f";{s}"
+                else:
+                    rcs[g] = s
         # go through all columns of xterms
         for xpat in xpats:
             xc = xpat[0] # column name
             g = xpat[1] # go type
             # create list of cols and values
             if g in rcs:
-                z = rcs[g]
-                r = ",".join([ f"{c}:[{';'.join(v)}]" for c,v in z.items() ])
+                r = rcs[g]
                 xcols.append(xc)
                 xvals.append([r])
             else:
@@ -562,14 +566,16 @@ class creator:
             try:
                 x = df[df[1] == acc][[3,4]].values.tolist()[0] # get the panther id and family description
                 x[0] = re.sub('\:.*$','',x[0]) # remove the subfamily id
-                rcs = f"{x[0]}>{x[1]}"
+                dsc = x[1].replace(';',',')
+                rcs = f"{x[0]}>{dsc}"
                 pass
             except Exception:
                 rcs = ''
                 pass            
-            # otherwise, we use the information from given records
+            # otherwise, we use the information from given records.
+            # it gets the list of unique panther ids removing the subfamily id
             if rcs == '':
-                rcs = ";".join([x[0] for x in rconts])
+                rcs = ";".join( np.unique([re.sub('\:.*$','',x[0]) for x in rconts]) )
             # create list of cols and values
             if rcs != '':
                 xcols.append(xc)
@@ -597,6 +603,8 @@ class creator:
                 id = rcont[0]
                 dsc = "|".join(rcont[1:])
                 dsc = re.sub(r'\s*\[[^\]]*\]\s*$','',dsc)
+                dsc = re.sub(r'\s*\.\s*$','',dsc)
+                dsc = dsc.replace(';',',')
                 rc = f"{id}>{dsc}"
                 rcs.append(rc)
             # create list of cols and values
@@ -626,7 +634,7 @@ class creator:
             if datatxt:
                 comps = list(filter(lambda person: acc in person['subunits(UniProt IDs)'], datatxt))
                 if comps:
-                    rcs += ";".join([ 'compID_'+str(comp['ComplexID'])+'>'+comp['ComplexName'] for comp in comps if 'ComplexID' in comp and 'ComplexName' in comp ])
+                    rcs += ";".join([ f"compID_{comp['ComplexID']}>{comp['ComplexName']}".replace(';',',') for comp in comps if 'ComplexID' in comp and 'ComplexName' in comp ])
             # create list of cols and values
             if rcs != '':
                 xcols.append(xc)
@@ -638,6 +646,36 @@ class creator:
         xvals = list(map(list, zip(*xvals)))
         return (xcols, xvals)
 
+    def _extract_cat_mim(self, rcomms, rconts, xpats):
+        '''
+        Extract the MIM record with the description of the diseases
+        '''
+        xcols = []
+        xvals = []
+        # go through all columns of xterms
+        for xpat in xpats:
+            xc = xpat[0] # column name
+            # xp = xpat[1] # pattern
+            # extract the description of diseases from the UniProt comments
+            rcs = ''
+            if rcomms:
+                # extract isoforms IDs and the displayed isoform
+                rcomms = [c for c in rcomms if 'DISEASE:' in c]
+                rcomms = [ re.findall(r"DISEASE:\s*([^\[]+)\[(MIM:\d+)\]\s*:", c) for c in rcomms ]
+                rcomms = [ c[1]+'>'+c[0].strip() for rcom in rcomms for c in rcom if c ]
+                rcs += ";".join([ c.replace(';',',') for c in rcomms ])
+            # create list of cols and values
+            if rcs != '':
+                xcols.append(xc)
+                xvals.append([rcs])
+            else:
+                xcols.append(xc)
+                xvals.append([np.nan])
+        # transpose list of lists
+        xvals = list(map(list, zip(*xvals)))
+        return (xcols, xvals)
+
+        
     def _extract_cat_drugbank(self, rconts, xpats):
         '''
         Parse the DrugBank record
@@ -653,6 +691,7 @@ class creator:
             for rcont in rconts:
                 id = rcont[0]
                 dsc = "|".join(rcont[1:])
+                dsc = dsc.replace(';',',')
                 rc = f"{id}>{dsc}"
                 rcs.append(rc)
             # create list of cols and values

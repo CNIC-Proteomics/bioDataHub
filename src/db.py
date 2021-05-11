@@ -394,10 +394,10 @@ class creator:
                 xvals = list(map(list, zip(*xvals)))
             # create dataframe with the Xreferece information
             df2 = pd.DataFrame(columns=xcols, data=xvals)
-            if not df2.dropna().empty:
+            if not df2.dropna(how='all').empty:
                 # check if UniProt accession does not exit
                 # we add the given Isoforms ids
-                if df2[self.XID].dropna().empty:
+                if df2[self.XID].dropna(how='all').empty:
                     df2[self.XID] = IsoIds                        
                 df2.set_index(self.XID, inplace=True)
                 # join using the index which is the UniProt accession of isoform
@@ -442,7 +442,7 @@ class creator:
                 xvals = list(map(list, zip(*xvals)))
             # create dataframe with the Xreferece information
             df2 = pd.DataFrame(columns=xcols, data=xvals)
-            if not df2.dropna().empty:
+            if not df2.dropna(how='all').empty:
                 # we add the given Isoforms ids
                 dfx = pd.DataFrame(columns=[self.XID], data=IsoIds)
                 df2 = pd.concat([df2,dfx],axis=1).ffill()

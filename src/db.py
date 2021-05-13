@@ -71,7 +71,7 @@ class creator:
         ('PANTHER',  [('cat_PANTHER','')]),
         ('Reactome', [('cat_Reactome','')]),
         ('CORUM',    [('cat_CORUM','')]),
-        ('MIM',      [('cat_MIM','')]),
+        # ('MIM',      [('cat_OMIM','')]), # OMIM is disabled
         # ('DrugBank', [('cat_DrugBank','')]) # DrugBank is disabled
     ]
     HEADERS = [ h for h in META] + [ h for i in XTERMS for h in i[1][:-1] ] + [ h[0] for i in CTERMS for h in i[1] ]
@@ -561,23 +561,23 @@ class creator:
         xvals = []
         # go through all columns of xterms
         for xpat in xpats:
-            xc = xpat[0] # column name
-            # extract the information from the given UniProt accession
+            xc = xpat[0] # column name            
             try:
-                x = df[df[1] == acc][[3,4]].values.tolist()[0] # get the panther id and family description
-                x[0] = re.sub('\:.*$','',x[0]) # remove the subfamily id
-                dsc = x[1].replace(';',',')
-                rcs = f"{x[0]}>{dsc}"
+                # extract the information from the Panther id
+                rcs = ''
+                for rcont in rconts:
+                    id = rcont[0]
+                    x = df[df[3].str.startswith(id)][[3,4]].values.tolist()[0] # get the panther id and family description
+                    x[0] = re.sub('\:.*$','',x[0]) # remove the subfamily id
+                    dsc = x[1].replace(';',',')
+                    rcs = f"{x[0]}>{dsc};"
                 pass
             except Exception:
                 rcs = ''
                 pass            
-            # otherwise, we use the information from given records.
-            # it gets the list of unique panther ids removing the subfamily id
-            if rcs == '':
-                rcs = ";".join( np.unique([re.sub('\:.*$','',x[0]) for x in rconts]) )
             # create list of cols and values
             if rcs != '':
+                rcs = re.sub(r'\;$','', rcs) # delete ; at the end of string
                 xcols.append(xc)
                 xvals.append([rcs])
             else:

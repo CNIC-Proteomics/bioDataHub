@@ -6,10 +6,12 @@ DATE: 2021_05
 
 + Fixing some bugs in the parser section.
 
-+ OMIM database has been included.
++ OMIM database has been included but then it has been disabled.
 
 + The following filter in the GO terms is by default:
 "cat_GO_*:EXP,IDA,IPI,IMP,IGI,IEP,HTP,HDA,HMP,HGI,HEP,IBA,IBD,IKR,IRD"
+
++ The descriptions of PANTHER have increased.
 
 ___
 ## v2.3

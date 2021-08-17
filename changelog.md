@@ -1,4 +1,11 @@
 ___
+## v2.5
+```
+DATE: 2021_08
+```
+
++ The delimiter that divides the categories of a protein, has changed from ";" to "||".
+___
 ## v2.4
 ```
 DATE: 2021_05

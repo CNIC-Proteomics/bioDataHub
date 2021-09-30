@@ -61,11 +61,14 @@ do
   OUTFILE="${OUTDIR}/${OUTNAME}.categories.tsv"
   LOGFILE="${LOGDIR}/create_sb.${OUTNAME}.log"
 
-  OUTFILE_cr="${OUTDIR}/${OUTNAME}.cat.tsv"
-  LOGFILE_cr="${LOGDIR}/createRels.${OUTNAME}.log"
+  OUTFILE_pid2cat="${OUTDIR}/${OUTNAME}.pid2cat.tsv"
+  LOGFILE_pid2cat="${LOGDIR}/createRels.${OUTNAME}.pid2cat.log"
+  OUTFILE_pdesc2cat="${OUTDIR}/${OUTNAME}.pdesc2cat.tsv"
+  LOGFILE_pdesc2cat="${LOGDIR}/createRels.${OUTNAME}.pdesc2cat.log"
 
   # execute commands
   CMD1="python '${CODEDIR}/src/create_sb.py' -s ${SPECIES} -o '${OUTFILE}' -vv  &> '${LOGFILE}' "
-  CMD2="python '${CODEDIR}/src/createRels.v0211.py' -vv  -ii '${OUTFILE}' -o '${OUTFILE_cr}' -i 'Comment_Line' -j 'cat_*' &> '${LOGFILE_cr}'"
-  run_cmd "${CMD1} ; ${CMD2}" &
+  CMD2="python '${CODEDIR}/src/createRels.v0211.py' -vv  -ii '${OUTFILE}' -o '${OUTFILE_pid2cat}' -i 'Protein' -j 'cat_*' &> '${LOGFILE_pid2cat}'"
+  CMD3="python '${CODEDIR}/src/createRels.v0211.py' -vv  -ii '${OUTFILE}' -o '${OUTFILE_pdesc2cat}' -i 'Comment_Line' -j 'cat_*' &> '${LOGFILE_pdesc2cat}'"
+  run_cmd "${CMD1} ; ${CMD2} ; ${CMD3}" &
 done

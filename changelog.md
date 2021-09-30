@@ -1,4 +1,14 @@
 ___
+## v2.6
+```
+DATE: 2021_10
+```
+
++ And again come back to use the ";" as delimiter.
+
++ Include the program "createRels" in this repository for ever. It retrieves the Relation Tables proteinId2category and proteindescription2category.
+
+___
 ## v2.5
 ```
 DATE: 2021_08

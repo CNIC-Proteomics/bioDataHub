@@ -1,5 +1,7 @@
 # Test folder
 test/*
+databases/*
+!databases/README.md
 
 # Python cache
 __pycache__

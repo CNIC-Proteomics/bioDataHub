@@ -164,7 +164,7 @@ for fasta in fastas:
 
 		
 #Close files
-fastas.close()
+# fastas.close()
 outfa.close()
 outfat.close()
 

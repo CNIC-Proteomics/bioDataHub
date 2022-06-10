@@ -50,7 +50,8 @@ def filter_rows(idf, filters):
         # filter olny in the selected columns
         out = [ re.findall(rf"{filt}", str(t)) if i in tup_avail else t for i,t in enumerate(tup) ]
         # the list of tuples coming from the "findall" is joined with ';'
-        out = [ ';'.join([str(x) for t in l for x in t if x != '']) if isinstance(l,list) else l for l in out]
+        # out = [ ';'.join([str(x) for t in l for x in t if x != '']) if isinstance(l,list) else l for l in out]
+        out = [ '//'.join([str(x) for t in l for x in t if x != '']) if isinstance(l,list) else l for l in out]
 
         return tuple(out)
     
@@ -100,7 +101,8 @@ def extract_and_join_columns(idf, header_inf, header_sup, header_thr, cols_inf, 
             if ':' in header:
                 out = [":".join([str(j) for j in s if not pd.isnull(j) and j != '']) for s in idf[cols].to_numpy()]
             else:
-                out = [";".join([str(j) for j in s if not pd.isnull(j) and j != '']) for s in idf[cols].to_numpy()]
+                # out = [";".join([str(j) for j in s if not pd.isnull(j) and j != '']) for s in idf[cols].to_numpy()]
+                out = ["//".join([str(j) for j in s if not pd.isnull(j) and j != '']) for s in idf[cols].to_numpy()]
         elif len(cols) == 1:
             # get the column
             col = cols[0]
@@ -150,7 +152,8 @@ def exploding_columns(idf):
         idf.replace(np.nan, '', inplace=True)
         # Exploding into multiple cells
         # We start with creating a new dataframe from the series with  as the index
-        df = pd.DataFrame(idf[x].str.split(';').tolist(), index=idf[y]).stack().rename(x)
+        # df = pd.DataFrame(idf[x].str.split(';').tolist(), index=idf[y]).stack().rename(x)
+        df = pd.DataFrame(idf[x].str.split('[//]').tolist(), index=idf[y]).stack().rename(x)
         df = df.reset_index()
         # convert the index, which is a list of tuple, into columns
         a = df.iloc[:,0].tolist()
@@ -167,7 +170,8 @@ def exploding_columns(idf):
     for x in cols:
         y = [i for i in cols if i != x]
         # check if ';' exits in column
-        if any(df[x].str.contains(';')): df = _exploding_columns(df, x, y)
+        # if any(df[x].str.contains(';')): df = _exploding_columns(df, x, y)
+        if any(df[x].str.contains('//')): df = _exploding_columns(df, x, y)
     return df
 
 

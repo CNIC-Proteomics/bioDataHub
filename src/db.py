@@ -3,6 +3,7 @@ import urllib.request
 import datetime
 import re
 import zipfile
+import shutil
 import json
 import pandas as pd
 import numpy as np
@@ -15,7 +16,8 @@ class creator:
     # https://www.uniprot.org/uniprot/?query=proteome:up000005640&format=fasta&include=yes&fil=reviewed:yes
     URL_UNIPROT = 'https://www.uniprot.org/uniprot/?'
     URL_UNIPROT += 'include=yes&' # include all isoforms
-    URL_CORUM   = 'http://mips.helmholtz-muenchen.de/corum/download/allComplexes.json.zip'
+    # URL_CORUM   = 'http://mips.helmholtz-muenchen.de/corum/download/allComplexes.json.zip' #It doesn't work :-(
+    URL_CORUM   = 'cached/allComplexes.json.zip'
     URL_PANTHER = 'ftp://ftp.pantherdb.org/sequence_classifications/current_release/PANTHER_Sequence_Classification_files/'
     SPECIES_LIST = {
         'human': {
@@ -217,8 +219,10 @@ class creator:
         if not os.path.isfile(self.db_corum):
             url = self.URL_CORUM
             db_dat = self.TMP_DIR +'/'+ os.path.basename(url)
-            logging.info("get "+url+" > "+db_dat)
-            urllib.request.urlretrieve(url, db_dat)
+            # logging.info("get "+url+" > "+db_dat)
+            # urllib.request.urlretrieve(url, db_dat)
+            logging.info("copy "+url+" > "+db_dat)
+            shutil.copyfile(url, db_dat)
             zip_ref = zipfile.ZipFile(db_dat, 'r')
             zip_ref.extractall(self.TMP_DIR)
             zip_ref.close()
@@ -467,9 +471,11 @@ class creator:
             g = rcont[1].split(':')[0]
             c = rcont[2].split(':')[0]
             if c in flts:
-                s = rcont[0]+'>'+rcont[1].replace(';',',')+'|'+rcont[2]
+                # s = rcont[0]+'>'+rcont[1].replace(';',',')+'|'+rcont[2]
+                s = rcont[0]+'>'+rcont[1]+'|'+rcont[2]
                 if g in rcs:
-                    rcs[g] += f";{s}"
+                    # rcs[g] += f";{s}"
+                    rcs[g] += f"//{s}"
                 else:
                     rcs[g] = s
         # go through all columns of xterms
@@ -510,6 +516,7 @@ class creator:
                     if os.path.isfile(of):
                         with open(of, 'r') as f:
                             rc = f.read()
+                            rc = re.sub(';','//',rc)
                     else:
                         if os.path.isfile(of2):
                             with open(of2, 'r') as f:
@@ -525,25 +532,29 @@ class creator:
                                     if m.startswith('PATHWAY'):
                                         m = re.sub('PATHWAY\s*','',m).strip()
                                         ms = re.split('\s+', m, 1) # split only for the first space
-                                        rc += f"{ms[0]}>{''.join(ms[1:])};"
+                                        # rc += f"{ms[0]}>{''.join(ms[1:])};"
+                                        rc += f"{ms[0]}>{''.join(ms[1:])}//"
                                     elif m.startswith(' '):
                                         m = re.sub('^\s*','',m).strip()
                                         ms = re.split('\s+', m, 1) # split only for the first space
-                                        rc += f"{ms[0]}>{''.join(ms[1:])};"
+                                        # rc += f"{ms[0]}>{''.join(ms[1:])};"
+                                        rc += f"{ms[0]}>{''.join(ms[1:])}//"
                                     else:
                                         break
                             if rc != '':
-                                rc = re.sub(r'\;$','', rc) # delete ; at the end of string
+                                # rc = re.sub(r'\;$','', rc) # delete ; at the end of string
+                                rc = re.sub(r'\/\/$','', rc)
                                 with open(of, 'w') as f:
                                     f.write(rc)
-                    rcs.append(rc)
+                    if rc != '': rcs.append(rc)
                         
                     pass
                 except:
                     pass
             # create list of cols and values
             if rcs:
-                rcs = ";".join(rcs)
+                # rcs = ";".join(rcs)
+                rcs = "//".join(rcs)
                 xcols.append(xc)
                 xvals.append([rcs])
             else:
@@ -569,8 +580,9 @@ class creator:
                     id = rcont[0]
                     x = df[df[3].str.startswith(id)][[3,4]].values.tolist()[0] # get the panther id and family description
                     x[0] = re.sub('\:.*$','',x[0]) # remove the subfamily id
-                    dsc = x[1].replace(';',',')
-                    rcs = f"{x[0]}>{dsc};"
+                    # dsc = x[1].replace(';',',')
+                    # rcs = f"{x[0]}>{dsc};"
+                    rcs = f"{x[0]}>{x[1]}//"
                 pass
             except Exception:
                 rcs = ''
@@ -578,6 +590,7 @@ class creator:
             # create list of cols and values
             if rcs != '':
                 rcs = re.sub(r'\;$','', rcs) # delete ; at the end of string
+                rcs = re.sub(r'\/\/$','', rcs)
                 xcols.append(xc)
                 xvals.append([rcs])
             else:
@@ -604,12 +617,13 @@ class creator:
                 dsc = "|".join(rcont[1:])
                 dsc = re.sub(r'\s*\[[^\]]*\]\s*$','',dsc)
                 dsc = re.sub(r'\s*\.\s*$','',dsc)
-                dsc = dsc.replace(';',',')
+                # dsc = dsc.replace(';',',')
                 rc = f"{id}>{dsc}"
                 rcs.append(rc)
             # create list of cols and values
             if rcs:
-                rcs = ";".join(rcs)
+                # rcs = ";".join(rcs)
+                rcs = "//".join(rcs)
                 xcols.append(xc)
                 xvals.append([rcs])
             else:
@@ -634,7 +648,8 @@ class creator:
             if datatxt:
                 comps = list(filter(lambda person: acc in person['subunits(UniProt IDs)'], datatxt))
                 if comps:
-                    rcs += ";".join([ f"compID_{comp['ComplexID']}>{comp['ComplexName']}".replace(';',',') for comp in comps if 'ComplexID' in comp and 'ComplexName' in comp ])
+                    # rcs += ";".join([ f"compID_{comp['ComplexID']}>{comp['ComplexName']}".replace(';',',') for comp in comps if 'ComplexID' in comp and 'ComplexName' in comp ])
+                    rcs += "//".join([ f"compID_{comp['ComplexID']}>{comp['ComplexName']}" for comp in comps if 'ComplexID' in comp and 'ComplexName' in comp ])
             # create list of cols and values
             if rcs != '':
                 xcols.append(xc)
@@ -663,7 +678,8 @@ class creator:
                 rcomms = [c for c in rcomms if 'DISEASE:' in c]
                 rcomms = [ re.findall(r"DISEASE:\s*([^\[]+)\[(MIM:\d+)\]\s*:", c) for c in rcomms ]
                 rcomms = [ c[1]+'>'+c[0].strip() for rcom in rcomms for c in rcom if c ]
-                rcs += ";".join([ c.replace(';',',') for c in rcomms ])
+                # rcs += ";".join([ c.replace(';',',') for c in rcomms ])
+                rcs += "//".join([ c for c in rcomms ])
             # create list of cols and values
             if rcs != '':
                 xcols.append(xc)
@@ -691,12 +707,13 @@ class creator:
             for rcont in rconts:
                 id = rcont[0]
                 dsc = "|".join(rcont[1:])
-                dsc = dsc.replace(';',',')
+                # dsc = dsc.replace(';',',')
                 rc = f"{id}>{dsc}"
                 rcs.append(rc)
             # create list of cols and values
             if rcs:
-                rcs = ";".join(rcs)
+                # rcs = ";".join(rcs)
+                rcs = "//".join(rcs)
                 xcols.append(xc)
                 xvals.append([rcs])
             else:

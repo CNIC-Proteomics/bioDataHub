@@ -6,12 +6,13 @@ if [[ ! -z "$1" ]]; then
 else
   VERSION=''
 fi
-DATE="$(date +"%Y%m")${VERSION}" # create date with version
-CODEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd -P)/.."
+DATE="$(date +"%Y%m")" # create date
+# CODEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd -P)/.."
+CODEDIR="S:/U_Proteomica/UNIDAD/DatosCrudos/jmrodriguezc/projects/iSanXoT-dbscripts"
 BASEDIR="//tierra.cnic.es/SC/U_Proteomica/UNIDAD/iSanXoT_DBs"
-OUTDIR="${BASEDIR}/${DATE}" # with date folder
+OUTDIR="${BASEDIR}/${DATE}${VERSION}" # with date+version folder
 WSDIR="${BASEDIR}/current_release"
-LOGDIR="${CODEDIR}/logs/${DATE}"
+LOGDIR="${CODEDIR}/logs/${DATE}${VERSION}" # with date+version folder
 
 TYPE_LIST=("pro-sw" "pro-sw-tr" "uni-sw" "uni-sw-tr")
 SPECIES_LIST=(human mouse rat pig rabbit zebrafish ecoli)
@@ -45,8 +46,8 @@ do
 
     # execute commands
     CMD1="python '${CODEDIR}/src/create_fasta.py' -s ${SPECIES} -f ${TYPE} -o '${OUTFILE}' -vv  &> '${LOGFILE}' "
-    CMD2="python '${CODEDIR}/src/decoyPYrat.v2.py' --output_fasta '${OUTFILE_dc}' --decoy_prefix=DECOY -t '${OUTFILE}.tmp' '${OUTFILE}' &> '${LOGFILE_dc_tg}' ; cat ${OUTFILE_tg} ${OUTFILE_dc} > ${OUTFILE_dc_tg} "
-    run_cmd "${CMD1} ; ${CMD2}" &
+    CMD2="python '${CODEDIR}/src/decoyPYrat.v2.py' --output_fasta '${OUTFILE_dc}' --decoy_prefix=DECOY -t '${OUTFILE}.tmp' '${OUTFILE}' &> '${LOGFILE_dc_tg}' && cat ${OUTFILE_tg} ${OUTFILE_dc} > ${OUTFILE_dc_tg} "
+    run_cmd "${CMD1} && ${CMD2}"
   done
 done
 
@@ -70,5 +71,5 @@ do
   CMD1="python '${CODEDIR}/src/create_sb.py' -s ${SPECIES} -o '${OUTFILE}' -vv  &> '${LOGFILE}' "
   CMD2="python '${CODEDIR}/src/createRels.v0211.py' -vv  -ii '${OUTFILE}' -o '${OUTFILE_pid2cat}' -i 'Protein' -j 'cat_*' &> '${LOGFILE_pid2cat}'"
   CMD3="python '${CODEDIR}/src/createRels.v0211.py' -vv  -ii '${OUTFILE}' -o '${OUTFILE_pdesc2cat}' -i 'Comment_Line' -j 'cat_*' &> '${LOGFILE_pdesc2cat}'"
-  run_cmd "${CMD1} ; ${CMD2} ; ${CMD3}" &
+  run_cmd "${CMD1} && ${CMD2} && ${CMD3}"
 done

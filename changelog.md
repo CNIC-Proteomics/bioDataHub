@@ -1,4 +1,16 @@
 ___
+## v2.7
+```
+DATE: 2022_06
+```
+
++ The categories are separated by the "//" delimiter.
+
++ The program "createRels" separate the categories by "//".
+
++ Something was wrong in the decoyPyrat "fastas.close()" than after was correct.
+
+___
 ## v2.6
 ```
 DATE: 2021_10

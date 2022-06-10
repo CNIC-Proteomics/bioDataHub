@@ -19,7 +19,7 @@ Python3 and the following Python packages:
 
 ### To execute the whole workflow:
 ```bash
-./bin/create_db_sb.sh
+./bin/create_db_sb.sh inprogress
 ```
 
 

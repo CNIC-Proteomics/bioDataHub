@@ -10,6 +10,8 @@ DATE: 2022_06
 
 + Something was wrong in the decoyPyrat "fastas.close()" than after was correct.
 
++ Include a program that reports some statistic values.
+
 ___
 ## v2.6
 ```

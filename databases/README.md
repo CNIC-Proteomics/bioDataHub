@@ -1,5 +1,10 @@
 # Introduction
 
+The programs for the Databases in the Proteomics Unit of CNIC are in the following repository:
+
+https://github.com/CNIC-Proteomics/iSanXoT-dbscripts
+
+
 In this folder are located the **protein sequences** and the **category files** for the proteins in multiple species:
 
 - Human
@@ -92,3 +97,23 @@ The type of category files are:
 - cat  (DEPRECATED) =>  This file contains the following columns:
     + categories: They are the same categories than the large file 'categories.tsv'
     + command line of protein
+
+## Statistic files
+
+These files show the number of isoforms per category.
+
+The file structure name is:
+
+{species}_{date}.stats.tsv
+
+The categories are:
+
+  + Reviewed (Swiss-Prot): Manually annotated. Records with information extracted from literature and curator-evaluated computational analysis.
+  + Unreviewed (TrEMBL): Computationally analyzed. Records that await full manual annotation.
+  + cat_GO_C: The Gene Ontology (GO) project provides a set of hierarchical controlled vocabulary, in this case for "Cellular Component (C)".
+  + cat_GO_F: The Gene Ontology (GO) project provides a set of hierarchical controlled vocabulary, in this case for "Molecular Function (F)".
+  + cat_GO_P: The Gene Ontology (GO) project provides a set of hierarchical controlled vocabulary, in this case for "Biological Process (P)".
+  + cat_KEGG: Kyoto Encyclopedia of Genes and Genomes
+  + cat_PANTHER: 	PANTHER is a protein database for families and domains
+  + cat_Reactome: Reactome is a database with knowledgebase of biological pathways and processes.
+  + cat_CORUM: The CORUM database provides a resource of manually annotated protein complexes from mammalian organisms.

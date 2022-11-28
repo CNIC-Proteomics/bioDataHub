@@ -13,9 +13,16 @@ from Bio.KEGG import REST
 
 
 class creator:
-    # https://www.uniprot.org/uniprot/?query=proteome:up000005640&format=fasta&include=yes&fil=reviewed:yes
-    URL_UNIPROT = 'https://www.uniprot.org/uniprot/?'
-    URL_UNIPROT += 'include=yes&' # include all isoforms
+    # begin: DEPRECATED
+    # https://www.uniprot.org/uniprot/?query=proteome:up000005640&format=fasta&include=yes&fil=reviewed:yes    
+    # URL_UNIPROT = 'https://www.uniprot.org/uniprot/?'
+    # URL_UNIPROT += 'include=yes&' # include all isoforms
+    # end: DEPRECATED
+    # https://rest.uniprot.org/uniprotkb/stream?format=fasta&includeIsoform=true&query=%28taxonomy_id%3A10090%29%20AND%20%28reviewed%3Atrue%29
+    # https://rest.uniprot.org/uniprotkb/stream?format=fasta&includeIsoform=true&query=%28%28proteome%3AUP000000589%29%29
+    URL_UNIPROT = 'https://rest.uniprot.org/uniprotkb/stream?'
+    URL_UNIPROT += 'includeIsoform=true&' # include all isoforms
+    
     # URL_CORUM   = 'http://mips.helmholtz-muenchen.de/corum/download/allComplexes.json.zip' #It doesn't work :-(
     URL_CORUM   = 'cached/allComplexes.json.zip'
     URL_PANTHER = 'ftp://ftp.pantherdb.org/sequence_classifications/current_release/PANTHER_Sequence_Classification_files/'
@@ -167,12 +174,15 @@ class creator:
         '''        
         # filter by SwissProt (Reviwed) if apply
         if not os.path.isfile(self.outfile):
+            # create the query
+            query = ''
             if filt and filt.startswith("pro"): # filter by proteome
-                url = self.URL_UNIPROT +'query=proteome:'+ self.proteome_id
+                query = 'proteome:'+ self.proteome_id
             else: # by default filter by organism
-                url = self.URL_UNIPROT +'query='+ 'organism:'+self.species+ '+taxonomy:'+self.taxonomy
+                query = 'taxonomy_id:'+self.taxonomy
             if filt and filt.endswith("sw"): # filter by SwissProt
-                url += '&fil=reviewed:yes'
+                query += '%20AND%20reviewed=true'
+            url = self.URL_UNIPROT + f"query=({query})"
             url += '&format=fasta'
             logging.info("get "+url+" > "+self.outfile)
             urllib.request.urlretrieve(url, self.outfile)
@@ -191,7 +201,7 @@ class creator:
         '''        
         # UniProt Fasta
         if not os.path.isfile(self.db_fasta):
-            url = self.URL_UNIPROT +'query='+ 'organism:'+self.species+ '+taxonomy:'+self.taxonomy
+            url = self.URL_UNIPROT +'query=(taxonomy_id:'+self.taxonomy+')'
             url += '&format=fasta'
             logging.info("get "+url+" > "+self.db_fasta)
             urllib.request.urlretrieve(url, self.db_fasta)
@@ -206,7 +216,7 @@ class creator:
 
         # UniProt Data
         if not os.path.isfile(self.db_uniprot):
-            url = self.URL_UNIPROT +'query='+ 'organism:'+self.species+ '+taxonomy:'+self.taxonomy
+            url = self.URL_UNIPROT +'query=(taxonomy_id:'+self.taxonomy+')'
             url += '&format=txt'
             logging.info("get "+url+" > "+self.db_uniprot)
             urllib.request.urlretrieve(url, self.db_uniprot)

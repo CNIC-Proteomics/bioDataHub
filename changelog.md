@@ -1,4 +1,12 @@
 ___
+## v2.8
+```
+DATE: 2022_11
+```
+
++ Updating the URL's due the changes from UniProtKB
+
+___
 ## v2.7
 ```
 DATE: 2022_06

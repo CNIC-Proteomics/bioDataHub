@@ -13,11 +13,6 @@ from Bio.KEGG import REST
 
 
 class creator:
-    # begin: DEPRECATED
-    # https://www.uniprot.org/uniprot/?query=proteome:up000005640&format=fasta&include=yes&fil=reviewed:yes    
-    # URL_UNIPROT = 'https://www.uniprot.org/uniprot/?'
-    # URL_UNIPROT += 'include=yes&' # include all isoforms
-    # end: DEPRECATED
     # https://rest.uniprot.org/uniprotkb/stream?format=fasta&includeIsoform=true&query=%28taxonomy_id%3A10090%29%20AND%20%28reviewed%3Atrue%29
     # https://rest.uniprot.org/uniprotkb/stream?format=fasta&includeIsoform=true&query=%28%28proteome%3AUP000000589%29%29
     URL_UNIPROT = 'https://rest.uniprot.org/uniprotkb/stream?'
@@ -25,7 +20,7 @@ class creator:
     
     # URL_CORUM   = 'http://mips.helmholtz-muenchen.de/corum/download/allComplexes.json.zip' #It doesn't work :-(
     URL_CORUM   = 'cached/allComplexes.json.zip'
-    URL_PANTHER = 'ftp://ftp.pantherdb.org/sequence_classifications/current_release/PANTHER_Sequence_Classification_files/'
+    URL_PANTHER = 'http://data.pantherdb.org/ftp/sequence_classifications/current_release/PANTHER_Sequence_Classification_files/'
     SPECIES_LIST = {
         'human': {
             'scientific': 'Homo sapiens',
@@ -313,8 +308,9 @@ class creator:
         # extract main info ---
         name = record.entry_name
         acc = record.accessions[0]
-        pattern = re.search(r'Name=([^\s|\;]*)', record.gene_name, re.I | re.M)
-        gene = pattern[1] if pattern else record.gene_name  
+        # pattern = re.search(r'Name=([^\s|\;]*)', record.gene_name, re.I | re.M)
+        # gene = pattern[1] if pattern else record.gene_name
+        gene = "".join([ re.sub('\s+.*$', '', r['Name']) if 'Name' in r else re.sub('\s+.*$', '', r['ORFNames'][0]) if 'ORFNames' in r else '' for r in record.gene_name ])
         pattern = re.search(r'[RecName|SubName]: Full=([^\;|\{]*)', record.description, re.I | re.M)
         dsc = pattern[1] if pattern else record.description
         dclass = record.data_class

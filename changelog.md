@@ -1,4 +1,14 @@
 ___
+## v2.9
+```
+DATE: 2022_11
+```
+
++ Updating the URL's due the changes from PANTHER.
+
++ Updating the changes in the UniProt text report.
+
+___
 ## v2.8
 ```
 DATE: 2022_11

@@ -13,51 +13,20 @@ from Bio.KEGG import REST
 
 
 class creator:
+    # Local folder
+    LOCAL_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    # Config file for the species
+    with open(os.path.join(LOCAL_DIR, 'config.json')) as f:
+       SPECIES_CFG = json.load(f)
+
     # https://rest.uniprot.org/uniprotkb/stream?format=fasta&includeIsoform=true&query=%28taxonomy_id%3A10090%29%20AND%20%28reviewed%3Atrue%29
     # https://rest.uniprot.org/uniprotkb/stream?format=fasta&includeIsoform=true&query=%28%28proteome%3AUP000000589%29%29
     URL_UNIPROT = 'https://rest.uniprot.org/uniprotkb/stream?'
-    URL_UNIPROT += 'includeIsoform=true&' # include all isoforms
-    
+    URL_UNIPROT += 'includeIsoform=true&' # include all isoforms    
     # URL_CORUM   = 'http://mips.helmholtz-muenchen.de/corum/download/allComplexes.json.zip' #It doesn't work :-(
     URL_CORUM   = 'cached/allComplexes.json.zip'
     URL_PANTHER = 'http://data.pantherdb.org/ftp/sequence_classifications/current_release/PANTHER_Sequence_Classification_files/'
-    SPECIES_LIST = {
-        'human': {
-            'scientific': 'Homo sapiens',
-            'taxonomy': '9606',
-            'proteome': 'UP000005640'
-        },
-        'mouse': {
-            'scientific': 'Mus musculus',
-            'taxonomy': '10090',
-            'proteome': 'UP000000589'
-        },
-        'rat': {
-            'scientific': 'Rattus norvegicus',
-            'taxonomy': '10116',
-            'proteome': 'UP000002494'
-        },
-        'pig': {
-            'scientific': 'Sus scrofa',
-            'taxonomy': '9823',
-            'proteome': 'UP000008227'
-        },
-        'rabbit': {
-            'scientific': 'Oryctolagus cuniculus',
-            'taxonomy': '9986',
-            'proteome': 'UP000001811'
-        },
-        'zebrafish': {
-            'scientific': 'Danio rerio',
-            'taxonomy': '7955',
-            'proteome': 'UP000000437'
-        },
-        'ecoli': {
-            'scientific': 'Escherichia coli',
-            'taxonomy': '562',
-            'proteome': 'UP000000558'
-        }
-    }
     # Column name with the cross-reference id
     XID = 'Protein'
     # Meta terms of Protein
@@ -86,24 +55,22 @@ class creator:
     Creates the databases
     '''
     def __init__(self, s, o, f=None):
-        
         # assign species
-        species = s.lower()
-        if species in self.SPECIES_LIST:
-            self.species = species
-            self.proteome_id = self.SPECIES_LIST[self.species]['proteome']
-            self.scientific = self.SPECIES_LIST[self.species]['scientific']
-            self.taxonomy = self.SPECIES_LIST[self.species]['taxonomy']
+        if s in self.SPECIES_CFG.keys():
+            self.species = s
+            self.proteome_id = self.SPECIES_CFG[self.species]['proteome']
+            self.scientific = self.SPECIES_CFG[self.species]['scientific']
+            self.taxonomy = self.SPECIES_CFG[self.species]['taxonomy']
         else:
-            sys.exit( "ERROR: Species parameter has been not found. Try with: "+", ".join(self.SPECIES_LIST.keys()) )
+            sys.exit( "ERROR: Species parameter has been not found. Try with: "+", ".join(self.SPECIES_CFG.keys()) )
         
         # prepare temporal file
-        self.TMP_DIR = os.path.dirname(os.path.abspath(__file__)) +'/../tmp/'+ self.TIME +'/'+ self.species
+        self.TMP_DIR = self.LOCAL_DIR +'/../tmp/'+ self.TIME +'/'+ self.species
         os.makedirs(self.TMP_DIR, exist_ok=True)
         logging.debug(f"TMP_DIR: {self.TMP_DIR}")
         
         # prepare cached directory
-        self.CHD_DIR = os.path.dirname(os.path.abspath(__file__)) +'/../cached/'+ self.species
+        self.CHD_DIR = self.LOCAL_DIR +'/../cached/'+ self.species
         os.makedirs(self.CHD_DIR, exist_ok=True)
         logging.debug(f"CACHED_DIR: {self.CHD_DIR}")
 
@@ -238,13 +205,16 @@ class creator:
         # get the list of species and extract the file name
         if not os.path.isfile(self.db_panther):
             url = self.URL_PANTHER
-            result = urllib.request.urlopen(url).read().decode('utf-8')
-            if result:
-                pattern = re.search(r'\s*(PTHR[^\_]*\_'+self.species+')', result, re.I | re.M)
-                if pattern:
-                    url = self.URL_PANTHER + pattern[1]
-                    logging.info("get "+url+" > "+self.db_panther)
-                    urllib.request.urlretrieve(url, self.db_panther)
+            try:
+                result = urllib.request.urlopen(url).read().decode('utf-8')
+                if result:
+                    pattern = re.search(r'\s*(PTHR[^\_]*\_'+self.species+')', result, re.I | re.M)
+                    if pattern:
+                        url = self.URL_PANTHER + pattern[1]
+                        logging.info("get "+url+" > "+self.db_panther)
+                        urllib.request.urlretrieve(url, self.db_panther)
+            except Exception as exc:
+                logging.warning(f"panther url does not exist: {exc}")
         else:
             logging.info('cached panther')
     

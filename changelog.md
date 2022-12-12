@@ -1,4 +1,14 @@
 ___
+## v2.10
+```
+DATE: 2022_12
+```
+
++ Add the species parameters from config file.
+
++ Catch the exception when PANTHER url does not exit.
+
+___
 ## v2.9
 ```
 DATE: 2022_11

@@ -27,6 +27,7 @@ class creator:
     # URL_CORUM   = 'http://mips.helmholtz-muenchen.de/corum/download/allComplexes.json.zip' #It doesn't work :-(
     URL_CORUM   = 'cached/allComplexes.json.zip'
     URL_PANTHER = 'http://data.pantherdb.org/ftp/sequence_classifications/current_release/PANTHER_Sequence_Classification_files/'
+    cRAP_FILE   = os.path.join(LOCAL_DIR, '../cached/cRAP/crap.modified.fasta')
     # Column name with the cross-reference id
     XID = 'Protein'
     # Meta terms of Protein
@@ -101,6 +102,21 @@ class creator:
             except Exception as e:
                 logging.error(e)
 
+    def _add_crap(self, infile, outfile=None):
+        '''
+        Add the cRAP database
+        '''
+        infile2 = self.cRAP_FILE
+        tmp_outfile = outfile+'.txt'
+        with open(tmp_outfile, 'w') as fo, open(infile, 'r') as f1, open(infile2, 'r') as f2:
+            fo.write("".join("{}\t{}".format(f1.read(),f2.read()) ))
+        # remove obsolete output file
+        if os.path.isfile(outfile):
+            os.remove(outfile)
+        # rename the temporal file
+        os.rename(tmp_outfile, outfile)
+        return None
+
     def _remove_duplicates(self, infile, outfile=None):
         '''
         Remove duplicated sequences
@@ -109,18 +125,19 @@ class creator:
         precords = SeqIO.parse(infile, "fasta")
         records = SeqIO.to_dict(precords)
         # read all sequences
-        # delete the duplicated sequences based on the sorted id's
+        # delete the trEMBL sequences based on the sorted id's (tr prefix)
         for i in list(records):
             record = records[i]
             s = str(record.seq)
             if s in seqs:
                 l = [seqs[s], i]
-                logging.warning( "duplicated sequences: {}".format(",".join(l)) , exc_info=False)
-                if outfile:
-                    l.sort()
-                    logging.warning( "deleting the sequences {}".format(l[1]) , exc_info=False)
-                    del records[l[1]]
-                    seqs[s] = l[0]
+                # check if there is a SwissProt protein and TrEMBL protein
+                p = ['sp|','tr|']
+                if all(x in " ".join(l) for x in p):
+                    logging.warning( "duplicated sequences: {}".format(",".join(l)) , exc_info=False)
+                    # remove all trEMBL proteins that are duplicated. remove multiple keys from dictionary
+                    logging.warning( "deleting the trEMBL sequences", exc_info=False)
+                    [ records.pop(i) for i in l if 'tr|' in i ]
             else:
                 seqs[s] = i
         # write file if apply
@@ -155,6 +172,10 @@ class creator:
         if d:
             logging.info("remove duplicate sequences")
             self._remove_duplicates(self.outfile, self.outfile)
+            
+        # adding the cRAP
+        logging.info("adding the cRAP database")
+        self._add_crap(self.outfile, self.outfile)
             
         
     def download_raw_dbs(self, filt=None):

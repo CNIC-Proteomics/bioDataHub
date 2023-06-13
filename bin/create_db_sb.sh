@@ -14,7 +14,7 @@ OUTDIR="${BASEDIR}/${DATE}${VERSION}" # with date+version folder
 WSDIR="${BASEDIR}/current_release"
 LOGDIR="${CODEDIR}/logs/${DATE}${VERSION}" # with date+version folder
 
-TYPE_LIST=("pro-sw" "pro-sw-tr" "uni-sw" "uni-sw-tr")
+TYPE_LIST=("pro-sw" "pro-sw-tr")
 SPECIES_LIST=(human mouse rat pig rabbit zebrafish ecoli)
 
 # Function that executes the input command
@@ -45,7 +45,7 @@ do
     LOGFILE_dc_tg="${LOGDIR}/decoyPYrat.${OUTNAME}.log"
 
     # execute commands
-    CMD1="python '${CODEDIR}/src/create_fasta.py' -s ${SPECIES} -f ${TYPE} -o '${OUTFILE}' -vv  &> '${LOGFILE}' "
+    CMD1="python '${CODEDIR}/src/create_fasta.py' -s ${SPECIES} -f ${TYPE} -o '${OUTFILE}' -d -vv  &> '${LOGFILE}' "
     CMD2="python '${CODEDIR}/src/decoyPYrat.v2.py' --output_fasta '${OUTFILE_dc}' --decoy_prefix=DECOY -t '${OUTFILE}.tmp' '${OUTFILE}' &> '${LOGFILE_dc_tg}' && cat ${OUTFILE_tg} ${OUTFILE_dc} > ${OUTFILE_dc_tg} "
     run_cmd "${CMD1} && ${CMD2}"
   done

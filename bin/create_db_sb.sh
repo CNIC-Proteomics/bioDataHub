@@ -15,7 +15,7 @@ WSDIR="${BASEDIR}/current_release"
 LOGDIR="${CODEDIR}/logs/${DATE}${VERSION}" # with date+version folder
 
 TYPE_LIST=("pro-sw" "pro-sw-tr")
-SPECIES_LIST=(human mouse rat pig rabbit zebrafish ecoli)
+SPECIES_LIST=(human mouse rat pig rabbit zebrafish ecoli chicken)
 
 # Function that executes the input command
 run_cmd () {

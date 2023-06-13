@@ -34,6 +34,11 @@
         "taxonomy": "7955",
         "proteome": "UP000000437"
     },
+    "chicken": {
+        "scientific": "Gallus gallus",
+        "taxonomy": "9031",
+        "proteome": "UP000000539"
+    },
     "ecoli": {
         "scientific": "Escherichia coli",
         "taxonomy": "562",

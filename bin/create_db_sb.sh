@@ -63,12 +63,12 @@ do
   LOGFILE="${LOGDIR}/create_sb.${OUTNAME}.log"
   OUTFILE_stats="${OUTDIR}/${OUTNAME}.stats.tsv"
 
-  OUTFILE_pid2cat="${OUTDIR}/${OUTNAME}.pid2cat.tsv"
-  LOGFILE_pid2cat="${LOGDIR}/createRels.${OUTNAME}.pid2cat.log"
+  OUTFILE_q2c="${OUTDIR}/${OUTNAME}.q2c.tsv"
+  LOGFILE_q2c="${LOGDIR}/createRels.${OUTNAME}.q2c.log"
 
   # execute commands
   CMD1="python '${CODEDIR}/src/create_sb.py' -s ${SPECIES} -o '${OUTFILE}' -vv  &> '${LOGFILE}' "
-  CMD2="python '${CODEDIR}/src/createRels.v0211.py' -vv  -ii '${OUTFILE}' -o '${OUTFILE_pid2cat}' -i 'Protein' -j 'cat_*' &> '${LOGFILE_pid2cat}'"
+  CMD2="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${OUTFILE}' -o '${OUTFILE_q2c}' -i 'Protein' -j 'cat_*' &> '${LOGFILE_q2c}'"
   CMD3="python '${CODEDIR}/src/stats_sb.py' -i '${OUTFILE}' -o ${OUTFILE_stats} -vv  &>> '${LOGFILE}' "
   run_cmd "${CMD1} && ${CMD2} && ${CMD3}"
 done

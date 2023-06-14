@@ -24,16 +24,16 @@ __status__ = "Development"
 # Local functions #
 ###################
 
-def get_cols_from_inheaders(df_cols, headers):
+def get_cols_from_headers(cols, headers):
     out = []
-    if df_cols and headers:
+    if cols and headers:
         if isinstance(headers, str): headers = re.split(r'\s*:\s*', headers)
         for c in headers:
-            if c in df_cols:
+            if c in cols:
                 out.append(c)
             elif '*' in c:
                 c = c.replace('*','\w+')
-                for s in df_cols:
+                for s in cols:
                     if re.match(c, s):
                         out = out + [ m for m in re.findall(c, s)]
             elif '[' in c and ']' in c:
@@ -93,15 +93,12 @@ def filter_rows(idf, filters):
     return idf
 
 
-def extract_and_join_columns(idf, header_inf, header_sup, header_thr, cols_inf, cols_sup, cols_thr):
+def extract_and_join_columns(idf, headers_inf, headers_sup, cols_inf, cols_sup):
     # extract the columns. If there are multiple columns, join in one
     def _extract_and_join_columns(idf, cols, header):
         out = []
         if len(cols) > 1:
             if ':' in header:
-                out = [":".join([str(j) for j in s if not pd.isnull(j) and j != '']) for s in idf[cols].to_numpy()]
-            else:
-                # out = [";".join([str(j) for j in s if not pd.isnull(j) and j != '']) for s in idf[cols].to_numpy()]
                 out = ["//".join([str(j) for j in s if not pd.isnull(j) and j != '']) for s in idf[cols].to_numpy()]
         elif len(cols) == 1:
             # get the column
@@ -126,9 +123,8 @@ def extract_and_join_columns(idf, header_inf, header_sup, header_thr, cols_inf, 
         return out
 
     # create a list of tuple with the (input columns and the output heaers)
-    colheaders = [(cols_inf,header_inf)]
-    if header_sup and cols_sup: colheaders.append((cols_sup,header_sup))
-    if header_thr and cols_thr: colheaders.append((cols_thr,header_thr))
+    colheaders = [(cols_inf,headers_inf)]
+    if headers_sup and cols_sup: colheaders.append((cols_sup,headers_sup))
     
     # init output dataframe
     odf = pd.DataFrame(columns=[h[1] for h in colheaders])
@@ -152,25 +148,21 @@ def exploding_columns(idf):
         idf.replace(np.nan, '', inplace=True)
         # Exploding into multiple cells
         # We start with creating a new dataframe from the series with  as the index
-        # df = pd.DataFrame(idf[x].str.split(';').tolist(), index=idf[y]).stack().rename(x)
-        df = pd.DataFrame(idf[x].str.split('//').tolist(), index=idf[y]).stack().rename(x)
+        df = pd.DataFrame(idf[x].str.split('//').tolist(), index=idf[y].values).stack().rename(x)
         df = df.reset_index()
         # convert the index, which is a list of tuple, into columns
-        a = df.iloc[:,0].tolist()
-        df[y] = pd.DataFrame(a, columns=y)
-        # remove columns based on the old index (2 columns)
-        df.drop( df.columns[0:2], axis=1, inplace=True)
-        # reorder columns from the given df
-        cols = idf.columns.tolist()
-        df = df[cols]
+        # level_0 is the correct
+        # remove level_1 column
+        df.rename(columns={'level_0': y}, inplace=True)
+        df.drop(['level_1'], axis=1, inplace=True)
         return df
         
     cols = idf.columns.tolist()
     df = idf
     for x in cols:
-        y = [i for i in cols if i != x]
-        # check if ';' exits in column
-        # if any(df[x].str.contains(';')): df = _exploding_columns(df, x, y)
+        # retrieve the column header other than the current loop
+        y = "".join([i for i in cols if i != x])
+        # check if '//' exits in column
         if any(df[x].str.contains('//')): df = _exploding_columns(df, x, y)
     return df
 
@@ -225,136 +217,46 @@ def main(args):
     Main function
     '''
     # get input variables
-    header_inf = args.inf_header
-    header_sup = args.sup_header
-    header_thr = args.thr_header
-    
-    # HARD-CODE: Filter the GO terms based on the evidence codes:
-    # http://geneontology.org/docs/guide-go-evidence-codes/
-    # IMPORTANT NOTE!! This filter is important because otherwise the memory exploits
-    # filters = "cat_GO_*:EXP,IDA,IPI,IMP,IGI,IEP,HTP,HDA,HMP,HGI,HEP,IBA,IBD,IKR,IRD"
-    filters = None
-    
-    logging.info("read input files of inferior header")
-    l = []
-    for f in args.inf_infiles.split(";"):
-        d = pd.read_csv(f, sep="\t", dtype=str, na_values=['NA'], low_memory=False)
-        l.append(d)
-    datinf = pd.concat(l)
-
-    datsup = None
-    if args.sup_infiles:
-        logging.info("read input file of superior header")
-        l = []
-        for f in args.sup_infiles.split(";"):
-            d = pd.read_csv(f, sep="\t", dtype=str, na_values=['NA'], low_memory=False)
-            l.append(d)
-        datsup = pd.concat(l)
-
-    datthr = None
-    if args.thr_infiles:
-        logging.info("read input file of third header")
-        l = []
-        for f in args.thr_infiles.split(";"):
-            d = pd.read_csv(f, sep="\t", dtype=str, na_values=['NA'], low_memory=False)
-            l.append(d)
-        datthr = pd.concat(l)
-    
-    
-    
-    logging.info("get the columns from the given headers")
-    # get the columns of all tables
-    cols_datinf = datinf.columns.to_list()
-    cols_datsup = datsup.columns.to_list() if (datsup is not None and not datsup.empty) else []
-    cols_datthr = datthr.columns.to_list() if (datthr is not None and not datthr.empty) else []
-    # get the inf/sup/thr columns based on all tables
-    all_cols = cols_datinf + cols_datsup + cols_datthr
-    cols_inf = get_cols_from_inheaders(all_cols, header_inf)
-    cols_sup = get_cols_from_inheaders(all_cols, header_sup)
-    cols_thr = get_cols_from_inheaders(all_cols, header_thr)
-    
-    
-    
-    
-    logging.info("get the intersected columns")
-    # get the intersected columns
-    iheader = cols_inf + cols_sup + cols_thr
-    iicols = get_cols_from_inheaders(cols_datinf, iheader)
-    iscols = get_cols_from_inheaders(cols_datsup, iheader) if (datsup is not None and not datsup.empty) else []
-    itcols = get_cols_from_inheaders(cols_datthr, iheader) if (datthr is not None and not datthr.empty) else []
-    # remove the column values with [x] and {x}
-    iicols = [ c for c in iicols if not ('[' in c and ']' in c) and not ('{' in c and '}' in c) ]
-    iscols = [ c for c in iscols if not ('[' in c and ']' in c) and not ('{' in c and '}' in c) ]
-    itcols = [ c for c in itcols if not ('[' in c and ']' in c) and not ('{' in c and '}' in c) ]
-    
-    
-    
-    # EXTRACT AND MERGE SECTION ---
-    
-    # first files - second files
-    outdat = datinf
-    if (datsup is not None and not datsup.empty):
-        # chech if there are intersected columns
-        intcols = np.intersect1d(iicols,iscols).tolist() if iscols else iicols
-        if intcols:
-            logging.info("merge the first file and the second file based on the intersected columns")
-
-            # Check the Protein column:
-            # check if the intersection column is from a xref-protein column, by default is the protein column
-            intcols2,iscols = replace_by_xrefprotein(intcols, iscols, outdat, cols_datsup)
-            
-            # extract the inf columns
-            outdat = outdat[iicols]            
-            # extract the sup columns
-            datsup = datsup[iscols]
-            
-            # merge the inf - sup df's
-            outdat = outdat.merge(datsup, left_on=intcols, right_on=intcols2, how='left', suffixes=('', '_old'))
-        else:
-            logging.info("make cross-reference with the first and second file before merge")
-            outdat = merge_unknown_columns(outdat, datsup)
-    
-    # second files - third files
-    if (datthr is not None and not datthr.empty):
-        intcols = np.intersect1d(iscols,itcols).tolist() if itcols else intcols
-        if intcols:
-            logging.info("merge with the third based on the intersected columns")
-            
-            # Check the Protein column:
-            # check if the intersection column is from a xref-protein column, by default is the protein column
-            intcols2,itcols = replace_by_xrefprotein(intcols, itcols, outdat, cols_datthr)
-            
-            # extract the thr columns
-            datthr = datthr[itcols]
-            
-            # merge withe thr df
-            outdat = outdat.merge(datthr, left_on=intcols, right_on=intcols2, how='left', suffixes=('', '_old'))
-            
-        else:
-            logging.info("make cross-reference with the third file before merge")
-            outdat = merge_unknown_columns(outdat, datthr)
+    headers_inf = args.inf_headers
+    headers_sup = args.sup_headers
+    pattern = args.pattern
 
     
-    # FILTER SECTION ---
-    if filters:
-        logging.info("filter the rows")
-        outdat = filter_rows(outdat, filters)
+    logging.info("reading the input file...")
+    outdat = pd.read_csv(args.infile, sep="\t", dtype=str, na_values=['NA'], low_memory=False)
+    
+    
+    
+    logging.info("getting the columns from the given headers...")
+    all_cols = outdat.columns.to_list()
+    cols_inf = get_cols_from_headers(all_cols, headers_inf)
+    cols_sup = get_cols_from_headers(all_cols, headers_sup)
+    
+    
         
 
-    # EXTRACT BASED ON HEADER NAME AND JOIN MULTIPLE COLUMNS IN ONE ---
-    logging.info("join the columns and add 1's")
-    outdat = extract_and_join_columns(outdat, header_inf, header_sup, header_thr, cols_inf, cols_sup, cols_thr)
+    logging.info("joining the columns...")
+    outdat = extract_and_join_columns(outdat, headers_inf, headers_sup, cols_inf, cols_sup)
     
     
-    logging.info("change the order of columns")
+
+    logging.info("exploding the columns into multiple rows...")
+    outdat = exploding_columns(outdat)
+
+
+    logging.info("changing the order of columns...")
     cols = outdat.columns.to_list()
     cols = [cols[i] for i in [1,0,2] if (i < len(cols))]
     outdat = outdat[cols]
 
-
-    logging.info("exploding the columns into multiple rows")
-    outdat = exploding_columns(outdat)
-
+    
+    # It is not necessary because the large file containing the categories no longer includes the evidence code.
+    # pattern = r'\|[EXP|IDA|IPI|IMP|IGI|IEP|HTP|HDA|HMP|HGI|HEP|IBA|IBD|IKR|IRD].*$'
+    if pattern:
+        logging.info("remove a given pattern from the categories...")
+        outdat[headers_inf].str.replace(pattern,'', regex=True, inplace=True)
+        outdat[headers_sup].str.replace(pattern,'', regex=True, inplace=True)
+        
 
     logging.info("remove duplicates and remove row with any empty column")
     # remove duplicates
@@ -362,7 +264,6 @@ def main(args):
     # remove row with any empty columns
     outdat.replace('', np.nan, inplace=True)
     outdat.dropna(inplace=True)
-
 
     logging.info('print output')
     outdat.to_csv(args.outfile, sep="\t", index=False)
@@ -373,19 +274,19 @@ if __name__ == "__main__":
     
     # parse arguments
     parser = argparse.ArgumentParser(
-        description='Create the relationship tables from several files',
+        description='Create a Relation Table (protein2category) based on the categories',
         epilog='''Examples:
-        python  src/preSanXoT/createRelsAlt.py
-          -ii TMT1/ID-q.tsv;TMT2/ID-q.tsv
-          -o rels_table.tsv
+* Create a Relation Table (protein2category) based on all the categories (cat_*)
+    python src/create_rt.py    -ii databases/human_202206.categories.tsv -o databases/human_202206.q2c.tsv -i "Protein" -j "cat_*"
+
+* Create a Relation Table (protein2category) based on the categories with the following headers: cat_GO_C, cat_GO_F, cat_GO_P, and cat_KEGG.
+    python src/create_rt.py    -ii databases/human_202206.categories.tsv -o databases/human_202206.q2c.tsv -i "Protein" -j "cat_GO_C:cat_GO_F:cat_GO_P:cat_KEGG"
         ''',
         formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-i',  '--inf_header',  required=True, help='Column(s) for the inferior level')
-    parser.add_argument('-j',  '--sup_header',  help='Column(s) for the superior level')
-    parser.add_argument('-k',  '--thr_header',  help='Column(s) for the third level')
-    parser.add_argument('-ii', '--inf_infiles',  required=True, help='Input file for the inferior header')
-    parser.add_argument('-ji', '--sup_infiles',  help='Input file for the superior header')
-    parser.add_argument('-ki', '--thr_infiles',  help='Input file for the third header')
+    parser.add_argument('-ii', '--infile',  required=True, help='Input file')
+    parser.add_argument('-i',  '--inf_headers',  required=True, help='Column(s) for the inferior level')
+    parser.add_argument('-j',  '--sup_headers',  help='Column(s) for the superior level')
+    parser.add_argument('-p',  '--pattern',  help='Regex pattern to remove from the category description')
     parser.add_argument('-o',  '--outfile', required=True, help='Output file with the relationship table')
     parser.add_argument('-vv', dest='verbose', action='store_true', help="Increase output verbosity")
     args = parser.parse_args()

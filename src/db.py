@@ -25,7 +25,7 @@ class creator:
     URL_UNIPROT = 'https://rest.uniprot.org/uniprotkb/stream?'
     URL_UNIPROT += 'includeIsoform=true&' # include all isoforms    
     # URL_CORUM   = 'http://mips.helmholtz-muenchen.de/corum/download/allComplexes.json.zip' #It doesn't work :-(
-    URL_CORUM   = 'cached/allComplexes.json.zip'
+    URL_CORUM   = os.path.join(LOCAL_DIR, '../cached/allComplexes.json.zip')
     URL_PANTHER = 'http://data.pantherdb.org/ftp/sequence_classifications/current_release/PANTHER_Sequence_Classification_files/'
     cRAP_FILE   = os.path.join(LOCAL_DIR, '../cached/cRAP/crap.modified.fasta')
     # Column name with the cross-reference id
@@ -45,8 +45,8 @@ class creator:
         ('PANTHER',  [('cat_PANTHER','')]),
         ('Reactome', [('cat_Reactome','')]),
         ('CORUM',    [('cat_CORUM','')]),
-        # ('MIM',      [('cat_OMIM','')]), # OMIM is disabled
-        # ('DrugBank', [('cat_DrugBank','')]) # DrugBank is disabled
+        ('MIM',      [('cat_OMIM','')]),
+        ('DrugBank', [('cat_DrugBank','')])
     ]
     HEADERS = [ h for h in META] + [ h for i in XTERMS for h in i[1][:-1] ] + [ h[0] for i in CTERMS for h in i[1] ]
     TIME = datetime.datetime.now().strftime("%Y%m")
@@ -468,8 +468,8 @@ class creator:
             g = rcont[1].split(':')[0]
             c = rcont[2].split(':')[0]
             if c in flts:
-                # s = rcont[0]+'>'+rcont[1].replace(';',',')+'|'+rcont[2]
-                s = rcont[0]+'>'+rcont[1]+'|'+rcont[2]
+                # s = rcont[0]+'>'+rcont[1]+'|'+rcont[2]
+                s = rcont[0]+'>'+rcont[1] # don't display the evidence code
                 if g in rcs:
                     # rcs[g] += f";{s}"
                     rcs[g] += f"//{s}"

@@ -34,21 +34,35 @@ The above example will save the databases in the "{date}.2" folder
 
 #### Only SwissProt data
 ```bash
-python src/create_fasta.py -s human  -f pro-sw         -o databases/human_202104_pro-sw.fasta     -vv  &> logs/create_fasta.human.log
+python src/create_fasta.py -s human  -f pro-sw         -o databases/human_202206_pro-sw.fasta     -vv  &> logs/create_fasta.human.log
 ```
 #### With SwissProt+TrEMBL
 ```bash
-python src/create_fasta.py -s human  -f pro-sw-tr      -o databases/human_202104_pro-sw-tr.fasta  -vv  &> logs/create_fasta.human.log
+python src/create_fasta.py -s human  -f pro-sw-tr      -o databases/human_202206_pro-sw-tr.fasta  -vv  &> logs/create_fasta.human.log
 ```
 #### Remove duplicated sequences in the FASTA file based on the sorted id's
 ```bash
-python src/create_fasta.py -s human  -f pro-sw-tr  -d  -o databases/human_202104_pro-sw-tr.fasta  -vv  &> logs/create_fasta.human.log
+python src/create_fasta.py -s human  -f pro-sw-tr  -d  -o databases/human_202206_pro-sw-tr.fasta  -vv  &> logs/create_fasta.human.log
 ```
 
 
 ### The following scripts, create a system biology data with the whole UniProtKB for the given species:
 ```bash
-python src/create_sb.py    -s human     -o databases/human_202104.categories.tsv       -vv  &> logs/create_sb.human.log
+python src/create_sb.py    -s human     -o databases/human_202206.categories.tsv       -vv  &> logs/create_sb.human.log
+```
+
+
+### The following scripts, create a relation table protein2category:
+
+Create a Relation Table (protein2category) based on all the categories (cat_*)
+```bash
+python src/create_rt.py    -ii databases/human_202206.categories.tsv -o databases/human_202206.q2c.tsv -i "Protein" -j "cat_*"
+```
+
+Create a Relation Table (protein2category) based on the categories with the following headers: cat_GO_C, cat_GO_F, cat_GO_P, and cat_KEGG.
+```bash
+python src/create_rt.py    -ii databases/human_202206.categories.tsv -o databases/human_202206.q2c.tsv -i "Protein" -j "cat_GO_C:cat_GO_F:cat_GO_P:cat_KEGG"
+
 ```
 
 

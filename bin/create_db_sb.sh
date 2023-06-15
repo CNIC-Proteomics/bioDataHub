@@ -16,6 +16,17 @@ LOGDIR="${CODEDIR}/logs/${DATE}${VERSION}" # with date+version folder
 
 TYPE_LIST=("pro-sw" "pro-sw-tr")
 SPECIES_LIST=(human mouse rat pig rabbit zebrafish ecoli chicken)
+CTERMS=(
+  "GO,cat_GO_C:cat_GO_F:cat_GO_P"
+  "KEGG,cat_KEGG"
+  "PANTHER,cat_PANTHER"
+  "Reactome,cat_Reactome"
+  "CORUM,cat_CORUM"
+  "MIM,cat_OMIM"
+  "DrugBank,cat_DrugBank"
+  "GO_KEGG_PANTHER_Reactome,cat_GO_C:cat_GO_F:cat_GO_P:cat_KEGG:cat_PANTHER:cat_Reactome"
+)
+
 
 # Function that executes the input command
 run_cmd () {
@@ -27,21 +38,25 @@ run_cmd () {
 # prepare workspaces
 mkdir "${LOGDIR}"
 
+
+
 # CREATE FASTA files --------
 
-# for the following databases and species...
+# go through the repositories...
 for TYPE in "${TYPE_LIST[@]}"
 do
+  # go through the species...
   for SPECIES in "${SPECIES_LIST[@]}"
   do
     # get local variables
+    OUTDIR_spe="${OUTDIR}/${SPECIES}/sequences" # re-declare the outdir with date+version+species
     OUTNAME="${SPECIES}_${DATE}_${TYPE}"
-    OUTFILE="${OUTDIR}/${OUTNAME}.fasta"
+    OUTFILE="${OUTDIR_spe}/${OUTNAME}.fasta"
     LOGFILE="${LOGDIR}/create_fasta.${OUTNAME}.log"
 
-    OUTFILE_dc="${OUTDIR}/${OUTNAME}.decoy.fasta"
-    OUTFILE_tg="${OUTDIR}/${OUTNAME}.target.fasta"
-    OUTFILE_dc_tg="${OUTDIR}/${OUTNAME}.target-decoy.fasta"
+    OUTFILE_dc="${OUTDIR_spe}/${OUTNAME}.decoy.fasta"
+    OUTFILE_tg="${OUTDIR_spe}/${OUTNAME}.target.fasta"
+    OUTFILE_dc_tg="${OUTDIR_spe}/${OUTNAME}.target-decoy.fasta"
     LOGFILE_dc_tg="${LOGDIR}/decoyPYrat.${OUTNAME}.log"
 
     # execute commands
@@ -52,23 +67,40 @@ do
 done
 
 
-# CREATE SYSTEM BIOLOGY files --------
 
-# for the following species...
+# CREATE SYSTEM BIOLOGY file (from UniProt) and the PROTEIN2CATEGORY files --------
+
+# go through the species...
 for SPECIES in "${SPECIES_LIST[@]}"
 do
   # get local variables
+  OUTDIR_spe="${OUTDIR}/${SPECIES}/categories" # re-declare the outdir with date+version+species
   OUTNAME="${SPECIES}_${DATE}"
-  OUTFILE="${OUTDIR}/${OUTNAME}.categories.tsv"
+  CATFILE="${OUTDIR_spe}/${OUTNAME}.uniprot.tsv"
+  STAFILE="${OUTDIR_spe}/${OUTNAME}.stats.tsv"
   LOGFILE="${LOGDIR}/create_sb.${OUTNAME}.log"
-  OUTFILE_stats="${OUTDIR}/${OUTNAME}.stats.tsv"
 
-  OUTFILE_q2c="${OUTDIR}/${OUTNAME}.q2c.tsv"
-  LOGFILE_q2c="${LOGDIR}/createRels.${OUTNAME}.q2c.log"
+  # execute the program that creates the large file with categories from UniProt, and retrieve some statistical values.
+  CMD1="python '${CODEDIR}/src/create_sb.py' -s ${SPECIES} -o '${CATFILE}' -vv  &> '${LOGFILE}' "
+  CMD2="python '${CODEDIR}/src/stats_sb.py' -i '${CATFILE}' -o ${STAFILE} -vv  &>> '${LOGFILE}' "
+  run_cmd "${CMD1} && ${CMD2}"
 
-  # execute commands
-  CMD1="python '${CODEDIR}/src/create_sb.py' -s ${SPECIES} -o '${OUTFILE}' -vv  &> '${LOGFILE}' "
-  CMD2="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${OUTFILE}' -o '${OUTFILE_q2c}' -i 'Protein' -j 'cat_*' &> '${LOGFILE_q2c}'"
-  CMD3="python '${CODEDIR}/src/stats_sb.py' -i '${OUTFILE}' -o ${OUTFILE_stats} -vv  &>> '${LOGFILE}' "
-  run_cmd "${CMD1} && ${CMD2} && ${CMD3}"
+  # go through the categories...
+  for CTERM in "${CTERMS[@]}"
+  do IFS=","
+    # get the values from the split by ','
+    set ${CTERM}
+    CNAME="${1}"
+    CCOLS="${2}"
+    # get local variables
+    CNAME=$(echo ${CNAME} | tr '[:upper:]' '[:lower:]') # convert to lowercase
+    OUTNAME="q2c__${SPECIES}_${DATE}.${CNAME}"
+    RTFILE="${OUTDIR_spe}/${OUTNAME}.tsv"
+    LOGFILE="${LOGDIR}/create_rt.${OUTNAME}.log"
+
+    # execute the program that creates the relation table 'q2c' from the given columns of categories
+    CMD3="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${CATFILE}' -o '${RTFILE}' -i 'Protein' -j '${CCOLS}' &> '${LOGFILE}'"
+    run_cmd "${CMD3}"
+  done
+
 done

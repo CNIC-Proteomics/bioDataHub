@@ -14,53 +14,50 @@ In this folder are located the **protein sequences** and the **category files** 
 - Rabbit
 - Zebrafish
 - E.Coli
+- Chicken
 
 # Description files
 
-For each species there are multiple files.
+For each species, there are two folders: sequences and categories
 
-## Protein sequences
 
-These files are the protein sequences in FASTA format. They depend on the type of database.
+## Sequences
 
-The file structure name is:
+This folder contains the protein sequences in FASTA format, which depend on the type of database.
 
-{species}_{date}_{database}.fasta
+The filename composition is:
 
-The type of database are the following:
+    {species}_{date}_{database}.fasta
 
-- _pro-sw    =>  SwissProt for the UniProtKB Proteome
-- _uni-sw    =>  SwissProt for the whole UniProtKB database
-- _pro-sw-tr =>  SwissProt for the UniProtKB Proteome
-- _uni-sw-tr =>  SwissProt for the whole UniProtKB database
+The type of *database* are the following:
+- pro-sw    =>  SwissProt for the UniProtKB Proteome
+- pro-sw-tr =>  SwissProt for the UniProtKB Proteome
 
-## Target/Decoy files
 
-There are target/decoy files for each type of Protein sequence files described above.
+There are target/decoy files for each type of protein sequence files described above.
 
 The decoy files have been created by the DecoyPYrat script from Sanger (https://www.sanger.ac.uk/science/tools/decoypyrat)
 
-The file structure name is:
+The filename composition is:
 
-{species}_{date}_{database}.{target/decoy}.fasta
+    {species}_{date}_{database}.{target/decoy}.fasta
 
-The type of target/decoy files are the following:
-
+The type of *target/decoy* files are the following:
 - target       =>  File with the protein sequences. In this file the peptides have been maked isobaric (replacing the I to L ).
 - decoy        =>  File with the only the decoy sequences. In this file the decoys have been maked isobaric (replacing the I to L ).
 - target-decoy =>  File that concatenate the target/decoy sequences (maked isobaric, replacing the I to L ).
 
-## Category files
+## Categories
 
-These files contains functional information that categorizes the proteins.
+This folder contains the files containing functional information that categorizes the proteins.
 
 The file structure name is:
 
-{species}_{date}.{type_cat}.tsv
+    {species}_{date}.{type_cat}.tsv
 
-The type of category files are:
+The files with the 'type_cat' suffix are as follows:
 
-- categories  => These files contain multiple columns with the following information:
+- uniprot  => These files contain multiple columns with the following information:
     + Meta terms of Protein:
       * xref_UniProt_Name: UniProt Name
       * Protein
@@ -85,35 +82,13 @@ The type of category files are:
       * cat_PANTHER: PANTHER information
       * cat_Reactome: Reactome information
       * cat_CORUM: CORUM information
+      * cat_OMIM: The OMIM database provides information on the disease(s) associated with genetic variations in a given protein
+      * cat_DrugBank: Drug and drug target database
 
-- pid2cat  =>  This file contains the following columns:
-    + categories: They are the same categories than the large file 'categories.tsv'
-    + UniProt Protein Accesion
+- "database name(s)" =>  This file contains the following columns:
+    + The first column contains the functional description of a protein provided by the database named in the filename.
+    + The second column is the UniProt accession of the protein in question.
 
-- pdesc2cat  =>  This file contains the following columns:
-    + categories: They are the same categories than the large file 'categories.tsv'
-    + command line of protein
 
-- cat  (DEPRECATED) =>  This file contains the following columns:
-    + categories: They are the same categories than the large file 'categories.tsv'
-    + command line of protein
+There is a statistical file, with the suffix 'stats', that displays the number of isoforms per category.
 
-## Statistic files
-
-These files show the number of isoforms per category.
-
-The file structure name is:
-
-{species}_{date}.stats.tsv
-
-The categories are:
-
-  + Reviewed (Swiss-Prot): Manually annotated. Records with information extracted from literature and curator-evaluated computational analysis.
-  + Unreviewed (TrEMBL): Computationally analyzed. Records that await full manual annotation.
-  + cat_GO_C: The Gene Ontology (GO) project provides a set of hierarchical controlled vocabulary, in this case for "Cellular Component (C)".
-  + cat_GO_F: The Gene Ontology (GO) project provides a set of hierarchical controlled vocabulary, in this case for "Molecular Function (F)".
-  + cat_GO_P: The Gene Ontology (GO) project provides a set of hierarchical controlled vocabulary, in this case for "Biological Process (P)".
-  + cat_KEGG: Kyoto Encyclopedia of Genes and Genomes
-  + cat_PANTHER: 	PANTHER is a protein database for families and domains
-  + cat_Reactome: Reactome is a database with knowledgebase of biological pathways and processes.
-  + cat_CORUM: The CORUM database provides a resource of manually annotated protein complexes from mammalian organisms.

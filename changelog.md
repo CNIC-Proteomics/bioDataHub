@@ -1,4 +1,35 @@
 ___
+## v2.11
+```
+DATE: 2023_06
+```
+
++ The file structure has been updated. Now, for each species, there are two folders: "sequences" and "categories".
+
++ The cRAP database (https://www.thegpm.org/crap/) has been added to the 'create_fasta' program.
+Please note that the cRAP fasta has been modified to include the 'cRAP_' prefix for all proteins.
+
++ Now, we retrieve only the Proteome proteins.
+
++ The duplicated proteins from TrEMBL have been removed.
+
++ The 'Gallus gallus' (chicken) has been added.
+
++ The 'pdesc2cat' files have been discarded.
+
++ The 'create_rt' program creates the Relation Table protein2category by filtering the categories. This program is based on 'createRels.v0211.py'.
+
++ The large file containing the categories does not include the evidence code in GO.
+
++ The 'create_sb' program creates a report file with the following categories:
+     GO, KEGG, PANTHER, Reactome, CORUM, MIM, and DrugBank.
+However, the 'create_rt' program will filter the categories based on their type.
+
++ There is a single relation table for each category, as well as a relation table that includes the most common databases:
+    GO, KEGG, PANTHER, and Reactome.
+
+
+___
 ## v2.10
 ```
 DATE: 2022_12

@@ -17,14 +17,14 @@ LOGDIR="${CODEDIR}/logs/${DATE}${VERSION}" # with date+version folder
 TYPE_LIST=("pro-sw" "pro-sw-tr")
 SPECIES_LIST=(human mouse rat pig rabbit zebrafish ecoli chicken)
 CTERMS=(
-  "GO,cat_GO_C:cat_GO_F:cat_GO_P"
-  "KEGG,cat_KEGG"
-  "PANTHER,cat_PANTHER"
-  "Reactome,cat_Reactome"
-  "CORUM,cat_CORUM"
-  "MIM,cat_OMIM"
-  "DrugBank,cat_DrugBank"
-  "GO_KEGG_PANTHER_Reactome,cat_GO_C:cat_GO_F:cat_GO_P:cat_KEGG:cat_PANTHER:cat_Reactome"
+  "GO,cat_GO_C:cat_GO_F:cat_GO_P,Categories"
+  "KEGG,cat_KEGG,Categories"
+  "PANTHER,cat_PANTHER,Categories"
+  "Reactome,cat_Reactome,Categories"
+  "CORUM,cat_CORUM,Categories"
+  "MIM,cat_OMIM,Categories"
+  "DrugBank,cat_DrugBank,Categories"
+  "GO_KEGG_PANTHER_Reactome,cat_GO_C:cat_GO_F:cat_GO_P:cat_KEGG:cat_PANTHER:cat_Reactome,Categories"
 )
 
 
@@ -92,15 +92,23 @@ do
     set ${CTERM}
     CNAME="${1}"
     CCOLS="${2}"
+    COUT="${3}"
     # get local variables
     CNAME=$(echo ${CNAME} | tr '[:upper:]' '[:lower:]') # convert to lowercase
+
+    # execute the program that creates the relation table 'q2c' from the given columns of categories
     OUTNAME="q2c__${SPECIES}_${DATE}.${CNAME}"
     RTFILE="${OUTDIR_spe}/${OUTNAME}.tsv"
     LOGFILE="${LOGDIR}/create_rt.${OUTNAME}.log"
+    CMD3="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${CATFILE}' -o '${RTFILE}' -i 'Protein' -j '${CCOLS}' -nj '${COUT}' &> '${LOGFILE}'"
 
-    # execute the program that creates the relation table 'q2c' from the given columns of categories
-    CMD3="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${CATFILE}' -o '${RTFILE}' -i 'Protein' -j '${CCOLS}' &> '${LOGFILE}'"
-    run_cmd "${CMD3}"
+    # execute the program that creates the relation table 'g2c' from the given columns of categories
+    OUTNAME="g2c__${SPECIES}_${DATE}.${CNAME}"
+    RTFILE="${OUTDIR_spe}/${OUTNAME}.tsv"
+    LOGFILE="${LOGDIR}/create_rt.${OUTNAME}.log"
+    CMD4="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${CATFILE}' -o '${RTFILE}' -i 'Gene'    -j '${CCOLS}' -nj '${COUT}' &> '${LOGFILE}'"
+
+    run_cmd "${CMD3} && ${CMD4}"
   done
 
 done

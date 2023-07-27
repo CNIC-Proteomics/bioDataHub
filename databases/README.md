@@ -53,11 +53,11 @@ This folder contains the files containing functional information that categorize
 
 The file structure name is:
 
-    {species}_{date}.{type_cat}.tsv
+    [q2c_|g2c_]{species}_{date}.{type_cat}.tsv
 
 The files with the 'type_cat' suffix are as follows:
 
-- uniprot  => These files contain multiple columns with the following information:
+- *uniprot* "{species}_{date}.uniprot.tsv" => These files contain multiple columns with the following information:
     + Meta terms of Protein:
       * xref_UniProt_Name: UniProt Name
       * Protein
@@ -85,9 +85,15 @@ The files with the 'type_cat' suffix are as follows:
       * cat_OMIM: The OMIM database provides information on the disease(s) associated with genetic variations in a given protein
       * cat_DrugBank: Drug and drug target database
 
-- "database name(s)" =>  This file contains the following columns:
-    + The first column contains the functional description of a protein provided by the database named in the filename.
-    + The second column is the UniProt accession of the protein in question.
+- *database name(s) for categories*: "q2c_{species}_{date}.{type_cat}.tsv"
+This file represents a protein-to-category relation table, with the following columns:
+    + The first column contains the functional description of a protein, as provided by the database named in the filename.
+    + The second column contains the UniProt accession of the protein in question.
+
+- *database name(s) for categories*: "g2c_{species}_{date}.{type_cat}.tsv"
+This file represents a gene-to-category relation table, with the following columns:
+    + The first column contains the functional description of a gene, as provided by the database named in the filename.
+    + The second column contains the gene in question.
 
 
 There is a statistical file, with the suffix 'stats', that displays the number of isoforms per category.

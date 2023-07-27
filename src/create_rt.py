@@ -298,7 +298,7 @@ if __name__ == "__main__":
     parser.add_argument('-i',  '--inf_headers',  required=True, help='Column(s) for the inferior level')
     parser.add_argument('-j',  '--sup_headers',  required=True, help='Column(s) for the superior level')
     parser.add_argument('-ni', '--inf_name',  help='Header name for the inferior level in the output file')
-    parser.add_argument('-nj', '--sup_name',  help='Header name for the superior level in the outpur file')
+    parser.add_argument('-nj', '--sup_name',  help='Header name for the superior level in the output file')
     parser.add_argument('-p',  '--pattern',  help='Regex pattern to remove from the category description')
     parser.add_argument('-o',  '--outfile', required=True, help='Output file with the relationship table')
     parser.add_argument('-vv', dest='verbose', action='store_true', help="Increase output verbosity")

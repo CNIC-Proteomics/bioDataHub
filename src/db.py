@@ -109,7 +109,7 @@ class creator:
         infile2 = self.cRAP_FILE
         tmp_outfile = outfile+'.txt'
         with open(tmp_outfile, 'w') as fo, open(infile, 'r') as f1, open(infile2, 'r') as f2:
-            fo.write("".join("{}\t{}".format(f1.read(),f2.read()) ))
+            fo.write("".join("{}{}".format(f1.read(),f2.read()) ))
         # remove obsolete output file
         if os.path.isfile(outfile):
             os.remove(outfile)

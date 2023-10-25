@@ -2,17 +2,20 @@
     "human": {
         "scientific": "Homo sapiens",
         "taxonomy": "9606",
-        "proteome": "UP000005640"
+        "proteome": "UP000005640",
+        "assembly": "GRCh38"
     },
     "mouse": {
         "scientific": "Mus musculus",
         "taxonomy": "10090",
-        "proteome": "UP000000589"
+        "proteome": "UP000000589",
+        "assembly": "GRCm39"
     },
     "rat": {
         "scientific": "Rattus norvegicus",
         "taxonomy": "10116",
-        "proteome": "UP000002494"
+        "proteome": "UP000002494",
+        "assembly": "mRatBN7.2"
     },
     "CHO": {
         "scientific": "Cricetulus griseus",
@@ -22,7 +25,8 @@
     "pig": {
         "scientific": "Sus scrofa",
         "taxonomy": "9823",
-        "proteome": "UP000008227"
+        "proteome": "UP000008227",
+        "assembly": "Sscrofa11.1"
     },
     "rabbit": {
         "scientific": "Oryctolagus cuniculus",
@@ -32,12 +36,20 @@
     "zebrafish": {
         "scientific": "Danio rerio",
         "taxonomy": "7955",
-        "proteome": "UP000000437"
+        "proteome": "UP000000437",
+        "assembly": "GRCz11"
     },
     "chicken": {
         "scientific": "Gallus gallus",
         "taxonomy": "9031",
-        "proteome": "UP000000539"
+        "proteome": "UP000000539",
+        "assembly": "bGalGal1.mat.broiler.GRCg7b"
+    },
+    "cow": {
+        "scientific": "Bos taurus",
+        "taxonomy": "9913",
+        "proteome": "UP000009136",
+        "assembly": "ARS-UCD1.3"
     },
     "ecoli": {
         "scientific": "Escherichia coli",

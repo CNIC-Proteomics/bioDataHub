@@ -1,21 +1,24 @@
 #!/usr/bin/bash
 
 # Declare variables
+# CODEDIR="S:/U_Proteomica/UNIDAD/DatosCrudos/jmrodriguezc/projects/iSanXoT-dbscripts"
+# BASEDIR="//tierra.cnic.es/SC/U_Proteomica/UNIDAD/iSanXoT_DBs"
+CODEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd -P)/.."
+BASEDIR="/mnt/tierra/U_Proteomica/UNIDAD/iSanXoT_DBs"
 if [[ ! -z "$1" ]]; then
   VERSION=".${1}"
 else
   VERSION=''
 fi
 DATE="$(date +"%Y%m")" # create date
-# CODEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd -P)/.."
-CODEDIR="S:/U_Proteomica/UNIDAD/DatosCrudos/jmrodriguezc/projects/iSanXoT-dbscripts"
-BASEDIR="//tierra.cnic.es/SC/U_Proteomica/UNIDAD/iSanXoT_DBs"
 OUTDIR="${BASEDIR}/${DATE}${VERSION}" # with date+version folder
 WSDIR="${BASEDIR}/current_release"
 LOGDIR="${CODEDIR}/logs/${DATE}${VERSION}" # with date+version folder
 
 TYPE_LIST=("pro-sw" "pro-sw-tr")
-SPECIES_LIST=(human mouse rat pig rabbit zebrafish ecoli chicken)
+SPECIES_LIST=(human mouse rat pig rabbit zebrafish chicken cow ecoli)
+declare -A ORTHOLOGS_SPECIES_MAP=(['rat']=1 ['pig']=1 ['rabbit']=1 ['chicken']=1 ['cow']=1)
+# Category terms
 CTERMS=(
   "GO,cat_GO_C:cat_GO_F:cat_GO_P,Categories"
   "KEGG,cat_KEGG,Categories"
@@ -25,6 +28,12 @@ CTERMS=(
   "MIM,cat_OMIM,Categories"
   "DrugBank,cat_DrugBank,Categories"
   "GO_KEGG_PANTHER_Reactome,cat_GO_C:cat_GO_F:cat_GO_P:cat_KEGG:cat_PANTHER:cat_Reactome,Categories"
+)
+# APPRIS terms
+ATERMS=(
+  "APPRIS,APPRIS Annotation,Categories"
+  "TRIFID,norm_trifid_score,Categories"
+  "CORSAIR,corsair_score,Categories"
 )
 
 
@@ -77,6 +86,7 @@ do
   OUTDIR_spe="${OUTDIR}/${SPECIES}/categories" # re-declare the outdir with date+version+species
   OUTNAME="${SPECIES}_${DATE}"
   CATFILE="${OUTDIR_spe}/${OUTNAME}.uniprot.tsv"
+  CATFILE_HUMAN="${OUTDIR}/human/categories/human_${DATE}.uniprot.tsv"
   STAFILE="${OUTDIR_spe}/${OUTNAME}.stats.tsv"
   LOGFILE="${LOGDIR}/create_sb.${OUTNAME}.log"
 
@@ -84,6 +94,25 @@ do
   CMD1="python '${CODEDIR}/src/create_sb.py' -s ${SPECIES} -o '${CATFILE}' -vv  &> '${LOGFILE}' "
   CMD2="python '${CODEDIR}/src/stats_sb.py' -i '${CATFILE}' -o ${STAFILE} -vv  &>> '${LOGFILE}' "
   run_cmd "${CMD1} && ${CMD2}"
+
+  # ADD THE ORTHOLOGS FOR "MINOR" SPECIES --------
+  if [ "${ORTHOLOGS_SPECIES_MAP[$SPECIES]}" == 1 ]; then
+    # get local variables
+    BIOMARTFILE="${OUTDIR_spe}/${OUTNAME}.biomart.tsv"
+    ORTHOLOGSFILE="${OUTDIR_spe}/${OUTNAME}_with_human_orthologs.uniprot.tsv"
+    LOGFILE="${LOGDIR}/create_orthologs.${OUTNAME}.log"
+
+    # execute the programs:
+    # dowload the human orthologs from Ensembl Biomart
+    # retrieve the human categories from the orthologous genes
+    CMD1="python '${CODEDIR}/src/download_orthologs.py' -s ${SPECIES} -o '${BIOMARTFILE}' -vv  &> '${LOGFILE}' "
+    CMD2="python '${CODEDIR}/src/categorize_orthologs.py' -im '${BIOMARTFILE}' -ic1 '${CATFILE_HUMAN}' -ic2 '${CATFILE}' -o '${ORTHOLOGSFILE}'  &>> '${LOGFILE}' "
+    run_cmd "${CMD1} && ${CMD2}"
+
+    # Rename CATEGORY FILE
+    CATFILE="${ORTHOLOGSFILE}"
+  fi
+
 
   # go through the categories...
   for CTERM in "${CTERMS[@]}"
@@ -111,4 +140,25 @@ do
     run_cmd "${CMD3} && ${CMD4}"
   done
 
-done
+
+  # go through the APPRIS annotations...
+  for ATERM in "${ATERMS[@]}"
+  do IFS=","
+    # get the values from the split by ','
+    set ${ATERM}
+    CNAME="${1}"
+    CCOLS="${2}"
+    COUT="${3}"
+    # get local variables
+    CNAME=$(echo ${CNAME} | tr '[:upper:]' '[:lower:]') # convert to lowercase
+
+    # execute the program that creates the relation table 'q2c' from the given columns of categories
+    OUTNAME="q2c__${SPECIES}_${DATE}.${CNAME}"
+    RTFILE="${OUTDIR_spe}/${OUTNAME}.tsv"
+    LOGFILE="${LOGDIR}/create_rt.${OUTNAME}.log"
+    CMD3="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${CATFILE}' -o '${RTFILE}' -i 'Protein' -j '${CCOLS}' -nj '${COUT}' &> '${LOGFILE}'"
+
+    run_cmd "${CMD3}"
+  done
+
+done # species loop

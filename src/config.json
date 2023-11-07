@@ -15,45 +15,46 @@
         "scientific": "Rattus norvegicus",
         "taxonomy": "10116",
         "proteome": "UP000002494",
-        "assembly": "mRatBN7.2"
-    },
-    "CHO": {
-        "scientific": "Cricetulus griseus",
-        "taxonomy": "10029",
-        "proteome": "UP000001075"
+        "assembly": "mRatBN7.2",
+        "alias": "rnorvegicus"
     },
     "pig": {
         "scientific": "Sus scrofa",
         "taxonomy": "9823",
         "proteome": "UP000008227",
-        "assembly": "Sscrofa11.1"
+        "assembly": "Sscrofa11.1",
+        "alias": "sscrofa"
     },
     "rabbit": {
         "scientific": "Oryctolagus cuniculus",
         "taxonomy": "9986",
-        "proteome": "UP000001811"
+        "proteome": "UP000001811",
+        "alias": "ocuniculus"
     },
     "zebrafish": {
         "scientific": "Danio rerio",
         "taxonomy": "7955",
         "proteome": "UP000000437",
-        "assembly": "GRCz11"
+        "assembly": "GRCz11",
+        "alias": "drerio"
     },
     "chicken": {
         "scientific": "Gallus gallus",
         "taxonomy": "9031",
         "proteome": "UP000000539",
-        "assembly": "bGalGal1.mat.broiler.GRCg7b"
+        "assembly": "bGalGal1.mat.broiler.GRCg7b",
+        "alias": "ggallus"
     },
     "cow": {
         "scientific": "Bos taurus",
         "taxonomy": "9913",
         "proteome": "UP000009136",
-        "assembly": "ARS-UCD1.3"
+        "assembly": "ARS-UCD1.3",
+        "alias": "btaurus"
     },
     "ecoli": {
         "scientific": "Escherichia coli",
-        "taxonomy": "562",
+        "taxonomy": "83334",
         "proteome": "UP000000558"
     }
 }

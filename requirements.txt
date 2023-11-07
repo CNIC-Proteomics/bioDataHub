@@ -1,0 +1,8 @@
+bioptython==1.80
+future==0.18.2
+json5==0.9.6
+numpy==1.23.5
+pandas==2.0.3
+requests==2.26.0
+urllib3==1.26.7
+

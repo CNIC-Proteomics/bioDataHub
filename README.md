@@ -1,18 +1,7 @@
 # Scripts for the Databases in the Proteomics Unit of CNIC
 
 ### Requirements:
-Python3 and the following Python packages:
-- sys
-- os
-- logging
-- urllib.request
-- datetime
-- re
-- zipfile
-- json
-- from Bio import SwissProt
-- from Bio import SeqIO
-- from Bio.KEGG import REST
+Python3 and the Python packages saved in the "requirements.txt" file
 
 
 ## Executions
@@ -79,4 +68,28 @@ cat uniprot_MusMusculus_dic2016.target.fa uniprot_MusMusculus_dic2016.decoy.fast
 ```
 
 
+# Add Human Orthologs
 
+## Download the human orthologs from Ensembl Biomart
+
+```bash
+python src/download_orthologs.py --species 'rabbit' --outfile test/rabbit/biomart.tsv
+```
+The list of species are: (rat pig rabbit zebrafish chicken) ['rnorvegicus','sscrofa','ocuniculus','drerio','ggallus']
+
+
+
+## Extract categories from orthologous genes
+
+
+Retrieve the human categories from the orthologous genes:
+```bash
+python  src/categorize_orthologs.py  -im test/rabbit/biomart.tsv -ic1 test/human_202306.uniprot.tsv -ic2 test/rabbit/rabbit_202306.uniprot.tsv -o test/rabbit/rabbit_202306_with_human_orthologs.uniprot.tsv
+```
+
+
+Obtain the Relation Table with the human categories from the orthologous genes:
+
+```
+python src/create_rt.py   -ii test/rabbit/rabbit_202306_with_human_orthologs.uniprot.tsv -o test/rabbit/rabbit_202306_with_human_orthologs.q2c.tsv -i "Protein" -j "cat_GO_C:cat_GO_F:cat_GO_P:cat_KEGG:cat_PANTHER:cat_Reactome" -nj Categories
+```

@@ -1,8 +1,10 @@
 import sys, os, logging
 import urllib.request
+import requests
 import datetime
 import re
 import zipfile
+import gzip
 import shutil
 import json
 import pandas as pd
@@ -27,6 +29,7 @@ class creator:
     # URL_CORUM   = 'http://mips.helmholtz-muenchen.de/corum/download/allComplexes.json.zip' #It doesn't work :-(
     URL_CORUM   = os.path.join(LOCAL_DIR, '../cached/allComplexes.json.zip')
     URL_PANTHER = 'http://data.pantherdb.org/ftp/sequence_classifications/current_release/PANTHER_Sequence_Classification_files/'
+    URL_APPRIS  = 'https://apprisws.bioinfo.cnio.es/pub/current_release/datafiles/'
     cRAP_FILE   = os.path.join(LOCAL_DIR, '../cached/cRAP/crap.modified.fasta')
     # Column name with the cross-reference id
     XID = 'Protein'
@@ -48,7 +51,13 @@ class creator:
         ('MIM',      [('cat_OMIM','')]),
         ('DrugBank', [('cat_DrugBank','')])
     ]
-    HEADERS = [ h for h in META] + [ h for i in XTERMS for h in i[1][:-1] ] + [ h[0] for i in CTERMS for h in i[1] ]
+    # APPRIS terms of Protein
+    ATERMS = [
+        ('APPRIS',   [('APPRIS Annotation','')]),
+        ('TRIFID',   [('norm_trifid_score','')]),
+        ('CORSAIR',   [('corsair_score','')])
+    ]
+    HEADERS = [ h for h in META] + [ h for i in XTERMS for h in i[1][:-1] ] + [ h[0] for i in CTERMS for h in i[1] ] + [ h[0] for i in ATERMS for h in i[1] ]
     TIME = datetime.datetime.now().strftime("%Y%m")
 
 
@@ -62,6 +71,7 @@ class creator:
             self.proteome_id = self.SPECIES_CFG[self.species]['proteome']
             self.scientific = self.SPECIES_CFG[self.species]['scientific']
             self.taxonomy = self.SPECIES_CFG[self.species]['taxonomy']
+            self.assembly = self.SPECIES_CFG[self.species]['assembly'] if 'assembly'in self.SPECIES_CFG[self.species] else None
         else:
             sys.exit( "ERROR: Species parameter has been not found. Try with: "+", ".join(self.SPECIES_CFG.keys()) )
         
@@ -85,11 +95,15 @@ class creator:
 
         # define output files for "create_sb"
         self.db_uniprot = self.TMP_DIR +'/uniprot.dat'
+        # self.db_uniprot = self.TMP_DIR +'/test.dat'
         # self.db_uniprot = self.TMP_DIR +'/../../../test/test_1033.dat'
         
         self.db_fasta = self.TMP_DIR +'/proteins.fasta'
         self.db_corum   = self.TMP_DIR +'/'+ ".".join(os.path.basename( self.URL_CORUM ).split(".")[:-1]) # get the filename from the URL (without 'zip' extension)
         self.db_panther = self.TMP_DIR +'/panther.dat'
+        self.db_appris  = self.TMP_DIR +'/appris.dat'
+        self.db_trifid  = self.TMP_DIR +'/trifid.dat'
+        self.db_corsair  = self.TMP_DIR +'/corsair.dat'
         self.cached_dir_kegg = self.CHD_DIR +'/kegg'
         os.makedirs(self.cached_dir_kegg, exist_ok=True)
 
@@ -173,15 +187,56 @@ class creator:
             logging.info("remove duplicate sequences")
             self._remove_duplicates(self.outfile, self.outfile)
             
-        # adding the cRAP
-        logging.info("adding the cRAP database")
-        self._add_crap(self.outfile, self.outfile)
+        # DEPRECATED
+        # # adding the cRAP
+        # logging.info("adding the cRAP database")
+        # self._add_crap(self.outfile, self.outfile)
             
-        
+    
+    def _download_appris_db(self, url, name, ofile):
+        # Send an HTTP GET request to the server directory
+        response = requests.get(url)
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            # Retrieves the hrefs from the HTML content of the page
+            hrefs = re.findall(r'href=\"([^\"]*)\"', response.text)
+            # Check if the filename ends with one of the target extensions
+            href = [ h for h in hrefs if h == name ]
+            if len(href) == 1:
+                href = href[0]
+                # rename the output if it is compressed file
+                if href.endswith('.gz'):
+                    ofile = f"{ofile}.gz"
+                # dowload the file
+                try:
+                    # Construct the full URL for the file
+                    href_url = url + '/'+ href
+                    # Download the file
+                    logging.info("get "+href_url+" > "+ofile)
+                    urllib.request.urlretrieve(href_url, ofile)
+                except Exception as exc:
+                    logging.warning(f"failed to dowload {href}: {exc}")
+                # uncompress if applied
+                try:
+                    if href.endswith('.gz'):
+                        ofile2 = ofile.replace('.gz','')
+                        logging.info("uncompressing "+ofile2)
+                        with gzip.open(ofile, 'rb') as f_in:
+                            with open(ofile2, 'wb') as f_out:
+                                shutil.copyfileobj(f_in, f_out)
+                except Exception as exc:
+                    logging.warning(f"failed uncompressing the file {ofile}: {exc}")
+            else:
+                logging.error(f"failed dowloading {name}")
+        else:
+            logging.error(f"failed dowloading {name}")
+
+
     def download_raw_dbs(self, filt=None):
         '''
         Download the raw databases
-        '''        
+        '''
+        
         # UniProt Fasta
         if not os.path.isfile(self.db_fasta):
             url = self.URL_UNIPROT +'query=(taxonomy_id:'+self.taxonomy+')'
@@ -239,6 +294,54 @@ class creator:
         else:
             logging.info('cached panther')
     
+        # APPRIS
+        # get the list of species and extract the file name
+        if not os.path.isfile(self.db_appris):
+            if self.assembly:
+                name = self.scientific.lower().replace(' ','_')
+                url = self.URL_APPRIS +name+'/'+self.assembly
+                try:
+                    self._download_appris_db(url, 'appris_data.principal.txt', self.db_appris)
+                except Exception as exc:
+                    logging.warning(f"failed dowloading the files: {exc}")
+            else:
+                logging.warning("assembly does not exist for appris annotation")
+        else:
+            logging.info('cached appris')
+            
+
+        # TRIFID
+        # get the list of species and extract the file name
+        if not os.path.isfile(self.db_trifid):
+            if self.assembly:
+                name = self.scientific.lower().replace(' ','_')
+                url = self.URL_APPRIS +name+'/'+self.assembly
+                try:
+                    self._download_appris_db(url, 'appris_method.trifid.txt', self.db_trifid)
+                except Exception as exc:
+                    logging.warning(f"failed dowloading the files: {exc}")
+            else:
+                logging.warning("assembly does not exist for trifid annotation")
+        else:
+            logging.info('cached trifid')
+            
+            
+        # CORSAIR
+        # get the list of species and extract the file name
+        if not os.path.isfile(self.db_corsair):
+            if self.assembly:
+                name = self.scientific.lower().replace(' ','_')
+                url = self.URL_APPRIS +name+'/'+self.assembly
+                try:
+                    self._download_appris_db(url, 'appris_method.corsair.gtf.gz', self.db_corsair)
+                except Exception as exc:
+                    logging.warning(f"failed dowloading the files: {exc}")
+            else:
+                logging.warning("assembly does not exist for corsair annotation")
+        else:
+            logging.info('cached corsair')
+
+
     
     def create_qreport(self):
         '''
@@ -249,22 +352,58 @@ class creator:
             logging.info('create reports from external data...')
             corum_json = None
             panther_df = None
+            appris_df = pd.DataFrame()
+            trifid_df = pd.DataFrame()
+            corsair_df = pd.DataFrame()
+            
             if os.path.isfile(self.db_corum):
                 with open(self.db_corum, 'r') as f:
                     corum_json = json.load(f)
+                    
             if os.path.isfile(self.db_panther):
                 panther_df = pd.read_csv(self.db_panther, sep="\t", dtype=str, header=None, low_memory=False)
+                
+            if os.path.isfile(self.db_appris):
+                try:                    
+                    appris_df = pd.read_csv(self.db_appris, sep="\t", dtype=str, usecols=['Gene ID','Transcript ID','APPRIS Annotation','MANE'], low_memory=False)
+                except Exception as exc:
+                    logging.warning(f"reading the appris database: {exc}")
+                    # could be that the columns do not exist
+                    try:                    
+                        appris_df = pd.read_csv(self.db_appris, sep="\t", dtype=str, header=None, low_memory=False)
+                        appris_df.columns = ['Gene name', 'Gene ID','Transcript ID','CCDS ID','APPRIS Annotation']
+                        appris_df = appris_df[['Gene ID','Transcript ID','APPRIS Annotation']]
+                    except Exception as exc:
+                        # could be that the columns do not exist
+                        logging.error(f"reading the appris database: {exc}")
+                        
+            if os.path.isfile(self.db_trifid):
+                trifid_df = pd.read_csv(self.db_trifid, sep="\t", dtype=str, usecols=['gene_id','transcript_id','norm_trifid_score'], low_memory=False)
+                
+            if os.path.isfile(self.db_corsair):
+                df = pd.read_csv(self.db_corsair, sep="\t", dtype=str, header=None, low_memory=False)
+                # create a column with the gene_id and transcriot_id
+                df_notes = pd.DataFrame()                
+                col_attr = df.columns[-1] # get the name of last column (attributes)
+                df_notes['ensembl_gene_id'] = df[col_attr].str.extract(r'gene_id \"([^\"]*)\"', expand=False)
+                df_notes['ensembl_transc_id']= df[col_attr].str.extract(r'transcript_id \"([^\"]*)\"', expand=False)
+                # join with the rest of information
+                df = pd.concat([df,df_notes], axis=1)
+                df = df.rename(columns={5:'corsair_score'})
+                # extract the id columns and the corsair score (from GTF format)
+                corsair_df = df[['ensembl_gene_id','ensembl_transc_id','corsair_score']]
+                
             
             logging.info("start the extraction of data...")
             ddf = []
             for rec in SwissProt.parse(open(self.db_uniprot)):
-                ddf.append( self._create_qreport(rec,corum_json,panther_df) )
-            ddf = pd.concat(ddf)
+                ddf.append( self._create_qreport(rec,corum_json,panther_df,appris_df,trifid_df,corsair_df) )
+            ddf = pd.concat(ddf, axis=0)
 
         return ddf
 
 
-    def _create_qreport(self, record, corum_json, panther_df):
+    def _create_qreport(self, record, corum_json, panther_df, appris_df, trifid_df, corsair_df):
         '''
         Create protein report
         '''
@@ -414,7 +553,7 @@ class creator:
         for r in rs:
             rcross.setdefault(r[0], []).append(r[1:])
 
-        # extract the category data ---
+        # extract the category data from UniProt ---
         for terms in self.CTERMS:
             xdb = terms[0]
             xpats = terms[1]
@@ -450,7 +589,30 @@ class creator:
                 df2.set_index(self.XID, inplace=True)
                 # join using the index which is the UniProt accession of isoform
                 df1 = df1.join(df2, how='outer')
-                        
+
+
+        if 'xref_Ensembl_GeneId' in df1.columns and 'xref_Ensembl_transcId' in df1.columns:
+            # reset index
+            df1 = df1.reset_index()
+            
+            # extract the APPRIS decision and MANE from cross-references data ---
+            if not appris_df.empty:
+                df1 = df1.merge(appris_df, how='left', left_on=['xref_Ensembl_GeneId','xref_Ensembl_transcId'], right_on=['Gene ID','Transcript ID']).drop_duplicates()
+                df1 = df1.drop(columns=['Gene ID','Transcript ID'])
+    
+            # extract the TRIFID score from cross-references data ---
+            if not trifid_df.empty:
+                df1 = df1.merge(trifid_df, how='left', left_on=['xref_Ensembl_GeneId','xref_Ensembl_transcId'], right_on=['gene_id','transcript_id']).drop_duplicates()
+                df1 = df1.drop(columns=['gene_id','transcript_id'])
+    
+            # extract the CORSAIR score from cross-references data ---
+            if not corsair_df.empty:
+                df1 = df1.merge(corsair_df, how='left', left_on=['xref_Ensembl_GeneId','xref_Ensembl_transcId'], right_on=['ensembl_gene_id','ensembl_transc_id']).drop_duplicates()
+                df1 = df1.drop(columns=['ensembl_gene_id','ensembl_transc_id'])
+            
+            # set index (Protein)
+            df1.set_index(self.XID, inplace=True)
+
         return df1
     
     def _extract_cat_go(self, rconts, xpats):

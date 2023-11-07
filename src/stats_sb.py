@@ -34,11 +34,11 @@ def main(args):
     # get the number of isoforms per category
     # add the column name to all values, except is null
     # create a dict with the number of proteins per category
-    c_cols = [ c for c in cat.columns if c.startswith('cat_') ]
+    c_cols = [ c for c in cat.columns if c.startswith('cat_') or c == 'APPRIS Annotation' or c == 'norm_trifid_score' or c == 'corsair_score']
     c_prot = cat[['Protein']+c_cols]
     out = dict()
     for c in c_prot.columns:
-        if c.startswith('cat_'):
+        if c in c_cols:
             c_prot.loc[c_prot[c].notnull(), c] = c    
             out.update( c_prot.groupby(c)['Protein'].nunique().to_dict() )
     category_prot = pd.DataFrame().from_dict(out.items())
@@ -48,7 +48,7 @@ def main(args):
     out.columns = ['Label','Isoforms']
 
     logging.info('printing stats file...')
-    out.to_csv(args.outfile, index=False, sep="\t", line_terminator='\n')
+    out.to_csv(args.outfile, index=False, sep="\t")
 
 
 

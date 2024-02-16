@@ -45,6 +45,12 @@
         "assembly": "bGalGal1.mat.broiler.GRCg7b",
         "alias": "ggallus"
     },
+    "sheep": {
+        "scientific": "Ovis aries",
+        "taxonomy": "9940",
+        "proteome": "UP000002356",
+        "alias": "oaries"
+    },
     "cow": {
         "scientific": "Bos taurus",
         "taxonomy": "9913",

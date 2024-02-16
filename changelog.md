@@ -4,6 +4,8 @@ ___
 DATE: 2023_11
 ```
 
++ The sheep species has been added.
+
 + Add the **Human Orthologs** for the species: 'rnorvegicus','cgriseus','sscrofa','ocuniculus','drerio','ggallus','btaurus'.
 
 + Add the label of Principal Isoform from APPRIS database, the TRIFID scores and CORSAIR score for the species: 'rat

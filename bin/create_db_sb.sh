@@ -16,7 +16,7 @@ WSDIR="${BASEDIR}/current_release"
 LOGDIR="${CODEDIR}/logs/${DATE}${VERSION}" # with date+version folder
 
 TYPE_LIST=("pro-sw" "pro-sw-tr")
-SPECIES_LIST=(human mouse rat pig rabbit zebrafish chicken cow ecoli)
+SPECIES_LIST=(human mouse rat pig rabbit zebrafish chicken sheep cow ecoli)
 declare -A ORTHOLOGS_SPECIES_MAP=(['rat']=1 ['pig']=1 ['rabbit']=1 ['chicken']=1 ['cow']=1)
 # Category terms
 CTERMS=(

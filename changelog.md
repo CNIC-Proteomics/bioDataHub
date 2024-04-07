@@ -4,7 +4,8 @@ ___
 DATE: 2024_03
 ```
 
-+ Rename the repository to "bioDataHub"
++ Rename the repository to "bioDataHub".
++ The program **download_AF** has been included. This program downloads the AlphaFold PDB predictions for the proteins: human, mouse, rat, and zebrafish.
 
 ___
 ## v2.12

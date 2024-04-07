@@ -3,20 +3,23 @@
         "scientific": "Homo sapiens",
         "taxonomy": "9606",
         "proteome": "UP000005640",
-        "assembly": "GRCh38"
+        "assembly": "GRCh38",
+        "alphafold": "https://ftp.ebi.ac.uk/pub/databases/alphafold/latest/UP000005640_9606_HUMAN_--VERSION--.tar"
     },
     "mouse": {
         "scientific": "Mus musculus",
         "taxonomy": "10090",
         "proteome": "UP000000589",
-        "assembly": "GRCm39"
+        "assembly": "GRCm39",
+        "alphafold": "https://ftp.ebi.ac.uk/pub/databases/alphafold/latest/UP000000589_10090_MOUSE_--VERSION--.tar"
     },
     "rat": {
         "scientific": "Rattus norvegicus",
         "taxonomy": "10116",
         "proteome": "UP000002494",
         "assembly": "mRatBN7.2",
-        "alias": "rnorvegicus"
+        "alias": "rnorvegicus",
+        "alphafold": "https://ftp.ebi.ac.uk/pub/databases/alphafold/latest/UP000002494_10116_RAT_--VERSION--.tar"
     },
     "pig": {
         "scientific": "Sus scrofa",
@@ -36,7 +39,8 @@
         "taxonomy": "7955",
         "proteome": "UP000000437",
         "assembly": "GRCz11",
-        "alias": "drerio"
+        "alias": "drerio",
+        "alphafold": "https://ftp.ebi.ac.uk/pub/databases/alphafold/latest/UP000000437_7955_DANRE_--VERSION--.tar"
     },
     "chicken": {
         "scientific": "Gallus gallus",

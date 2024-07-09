@@ -2,6 +2,7 @@
 test/*
 databases/*
 !databases/README.md
+env
 
 # Python cache
 __pycache__

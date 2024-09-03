@@ -108,6 +108,19 @@ class creator:
         os.makedirs(self.cached_dir_kegg, exist_ok=True)
 
 
+    def _download_file(self, url, dest_path):
+        '''
+        Download file from URL
+        '''
+        try:
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                with open(dest_path, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Request error: {e}")
+        
     def _delete_tmp_dir(self, dir):
         files = [ f for f in os.listdir(dir) ]
         for f in files:
@@ -178,7 +191,8 @@ class creator:
             url = self.URL_UNIPROT + f"query=({query})"
             url += '&format=fasta'
             logging.info("get "+url+" > "+self.outfile)
-            urllib.request.urlretrieve(url, self.outfile)
+            # urllib.request.urlretrieve(url, self.outfile)
+            self._download_file(url, self.outfile)
         else:
             logging.info('cached uniprot')
             
@@ -213,7 +227,8 @@ class creator:
                     href_url = url + '/'+ href
                     # Download the file
                     logging.info("get "+href_url+" > "+ofile)
-                    urllib.request.urlretrieve(href_url, ofile)
+                    # urllib.request.urlretrieve(href_url, ofile)
+                    self._download_file(href_url, ofile)
                 except Exception as exc:
                     logging.warning(f"failed to dowload {href}: {exc}")
                 # uncompress if applied
@@ -242,7 +257,8 @@ class creator:
             url = self.URL_UNIPROT +'query=(taxonomy_id:'+self.taxonomy+')'
             url += '&format=fasta'
             logging.info("get "+url+" > "+self.db_fasta)
-            urllib.request.urlretrieve(url, self.db_fasta)
+            # urllib.request.urlretrieve(url, self.db_fasta)
+            self._download_file(url, self.db_fasta)
         else:
             logging.info('cached uniprot fasta')
         logging.info('create report from fasta file with the UniProt accession')
@@ -257,7 +273,8 @@ class creator:
             url = self.URL_UNIPROT +'query=(taxonomy_id:'+self.taxonomy+')'
             url += '&format=txt'
             logging.info("get "+url+" > "+self.db_uniprot)
-            urllib.request.urlretrieve(url, self.db_uniprot)
+            # urllib.request.urlretrieve(url, self.db_uniprot)
+            self._download_file(url, self.db_uniprot)
         else:
             logging.info('cached uniprot data')
         
@@ -288,7 +305,8 @@ class creator:
                     if pattern:
                         url = self.URL_PANTHER + pattern[1]
                         logging.info("get "+url+" > "+self.db_panther)
-                        urllib.request.urlretrieve(url, self.db_panther)
+                        # urllib.request.urlretrieve(url, self.db_panther)
+                        self._download_file(url, self.db_panther)
             except Exception as exc:
                 logging.warning(f"panther url does not exist: {exc}")
         else:

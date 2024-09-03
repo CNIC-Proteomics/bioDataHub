@@ -14,7 +14,7 @@ import numpy as np
 import urllib.request
 import json
 import glob
-import tarfile
+import xtarfile as tarfile
 import gzip
 import concurrent.futures
 from itertools import repeat

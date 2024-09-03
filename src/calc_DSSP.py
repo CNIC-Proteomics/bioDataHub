@@ -12,8 +12,10 @@ import logging
 import re
 import glob
 import pandas as pd
+import numpy as np
 from Bio.PDB import PDBParser
 from Bio.PDB.DSSP import DSSP
+from Bio.SeqUtils import seq1
 import concurrent.futures
 from itertools import repeat
 
@@ -66,16 +68,45 @@ DSSP_HEADER = [
 ###################
 # Local functions #
 ###################
+# Calculate the 
+# rsa_window (default 25) - RSA values are smoothed over a window centered on the residue to predict
+# rsa_threshold (default 0.581) - Binding predictions are overweighted when disorder prediction is above this threshold
+# 
+# https://github.com/BioComputingUP/AlphaFold-disorder/
+# 
+# Piovesan D, Monzon AM, Tosatto SCE.
+# Intrinsic protein disorder and conditional folding in AlphaFoldDB. Protein Sci. 2022 Nov;31(11):e4466.
+# PMID: 36210722 PMCID: PMC9601767.
+
+def moving_average(x, w):
+    # https://stackoverflow.com/questions/13728392/moving-average-or-running-mean
+    return np.convolve(x, np.ones(w), 'valid') / w
+
+def make_prediction(df, window_rsa=[25], thresholds_rsa=[0.581]):
+    for w in window_rsa:
+        # Smooth disorder score (moving average)
+        column_rsa_window = 'disorder-{}'.format(w)
+        half_w = int((w - 1) / 2)
+        df[column_rsa_window] = moving_average(np.pad(df['Relative ASA'], (half_w, half_w), 'reflect'), half_w * 2 + 1)
+
+        # Transofrm scores above RSA threshold
+        for th_rsa in thresholds_rsa:
+            column_rsa_binding = 'binding-{}-{}'.format(w, th_rsa)
+            df[column_rsa_binding] = df[column_rsa_window].copy()
+            df.loc[df[column_rsa_window] > th_rsa, column_rsa_binding] = df.loc[
+                                            df[column_rsa_window] > th_rsa, 'pLDDT'] * (1 - th_rsa) + th_rsa
+    return df
+
 # Calculate the DSSP from protein id
 def calc_dssp(pdb, odir):
     # init variables
     dssp_report = []
     df = pd.DataFrame()
     # get the file name (pdb name)
-    pdb_name = os.path.splitext(os.path.basename(pdb))[0]
+    pdb_code = os.path.splitext(os.path.basename(pdb))[0]
     # get the protein id
-    match = re.search(AF_PDB_PATTHER, pdb_name)
-    q_id = match.group(1) if match else pdb_name
+    match = re.search(AF_PDB_PATTHER, pdb_code)
+    q_id = match.group(1) if match else pdb_code
     # calculate the DSSP
     try:
         # parse the PDB
@@ -89,17 +120,51 @@ def calc_dssp(pdb, odir):
     except Exception as e:
         logging.error(f"ERROR: calculating the DSSP for {q_id}: {e}")
     
-    # create dataframe and print DSSP
+    # create dataframe for DSSP
     try:
         if len(dssp_report) > 0:
             # create and print df
             df = pd.DataFrame(list(dssp_report), columns=DSSP_HEADER)
-            ofile = f"{odir}/DSSP_{pdb_name}.tsv"
-            df.to_csv(ofile, sep="\t", index=False)
-            # add the protein id into dataframe
-            df.insert(0, 'Protein_ID', q_id)
     except Exception as e:
         logging.error(f"ERROR: creating the dataframe for {q_id}: {e}")
+
+    if not df.empty:
+        # parse b-factor (pLDDT) and DSSP
+        try:
+            df2 = []
+            for i, residue in enumerate(model.get_residues()):
+                lddt = residue['CA'].get_bfactor()
+                df2.append((i + 1, seq1(residue.get_resname()), lddt))
+            df2 = pd.DataFrame(df2, columns=['pos', 'aa', 'pLDDT'])
+            # merge the DSSP and pLDDT scores
+            df = pd.merge(df, df2, left_on=['DSSP index','Amino acid'], right_on=['pos','aa'])
+            # remove columns
+            df.drop(['pos','aa'], axis=1, inplace=True)
+        except Exception as e:
+            logging.error(f"ERROR: parsing b-factor (pLDDT) and RSA for {q_id}: {e}")
+
+
+        # make prediction:
+        # rsa_window - RSA values are smoothed over a window centered on the residue to predict
+        # rsa_threshold - Binding predictions are overweighted when disorder prediction is above this threshold
+        try:
+            df = make_prediction(df.copy())
+        except Exception as e:
+            logging.error(f"ERROR: making smoothed over a window for {q_id}: {e}")
+
+    
+        # printing DSSP+AlphaFold report
+        try:
+            ofile = f"{odir}/DSSP_{pdb_code}.tsv"
+            df.to_csv(ofile, sep="\t", index=False)
+        except Exception as e:
+            logging.error(f"ERROR: printing DSSP+AlphaFold for {q_id}: {e}")
+       
+        # add the protein id into dataframe
+        try:
+            df.insert(0, 'Protein_ID', q_id)
+        except Exception as e:
+            logging.error(f"ERROR: adding the protein id into dataframe for {q_id}: {e}")
 
     return df
     
@@ -130,10 +195,10 @@ def main(args):
     logging.info("calculating the DSP for all given PDBs...")
     with concurrent.futures.ProcessPoolExecutor(max_workers=n_workers) as executor:        
         dssp_results = executor.map( calc_dssp, ipdbs, repeat(odir))
+    dssp_results = pd.concat(dssp_results)
     # begin:
     # dssp_results = calc_dssp(ipdbs[0], odir)
     # end
-    dssp_results = pd.concat(dssp_results)
 
 
     logging.info("printing the global DSSP report...")

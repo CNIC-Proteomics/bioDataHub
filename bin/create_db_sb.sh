@@ -4,7 +4,7 @@
 # CODEDIR="S:/U_Proteomica/UNIDAD/DatosCrudos/jmrodriguezc/projects/iSanXoT-dbscripts"
 # BASEDIR="//tierra.cnic.es/SC/U_Proteomica/UNIDAD/iSanXoT_DBs"
 CODEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd -P)/.."
-BASEDIR="/mnt/tierra/U_Proteomica/UNIDAD/Databases"
+BASEDIR="/mnt/tierra/U_Proteomica/UNIDAD/Databases/UniProt"
 if [[ ! -z "$1" ]]; then
   VERSION=".${1}"
 else

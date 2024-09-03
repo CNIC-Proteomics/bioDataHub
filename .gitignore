@@ -4,6 +4,9 @@ databases/*
 !databases/README.md
 env
 
+# Cacje folder
+cached
+
 # Python cache
 __pycache__
 src/__pycache__

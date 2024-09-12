@@ -59,7 +59,7 @@
         "scientific": "Bos taurus",
         "taxonomy": "9913",
         "proteome": "UP000009136",
-        "assembly": "ARS-UCD1.3",
+        "assembly": "ARS-UCD1.3_BAD_APPRIS",
         "alias": "btaurus"
     },
     "ecoli": {

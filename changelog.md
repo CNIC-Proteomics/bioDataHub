@@ -1,4 +1,12 @@
 ___
+## v2.14
+```
+DATE: 2024_XX
+```
+
++ Improving the URL request using a more robust library like *requests*, which handles streaming and large files better.
+
+___
 ## v2.13
 ```
 DATE: 2024_03

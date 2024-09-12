@@ -1,6 +1,8 @@
 import sys, os, logging
 import urllib.request
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import datetime
 import re
 import zipfile
@@ -108,19 +110,33 @@ class creator:
         os.makedirs(self.cached_dir_kegg, exist_ok=True)
 
 
-    def _download_file(self, url, dest_path):
+    def _download_file(self, url, dest_path, retries=3, backoff_factor=0.3, chunk_size=16*1024):
         '''
-        Download file from URL
+        Download file from URL with retries
         '''
         try:
-            with requests.get(url, stream=True) as r:
+            session = requests.Session()
+            retry = Retry(
+                total=retries,
+                read=retries,
+                connect=retries,
+                backoff_factor=backoff_factor,
+                status_forcelist=(500, 502, 504),
+            )
+            adapter = HTTPAdapter(max_retries=retry)
+            session.mount('http://', adapter)
+            session.mount('https://', adapter)
+
+            with session.get(url, stream=True) as r:
                 r.raise_for_status()
                 with open(dest_path, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=8192):
-                        f.write(chunk)
+                    for chunk in r.iter_content(chunk_size=chunk_size):
+                        if chunk:  # filter out keep-alive new chunks
+                            f.write(chunk)
         except requests.exceptions.RequestException as e:
             logging.error(f"Request error: {e}")
-        
+            raise
+                
     def _delete_tmp_dir(self, dir):
         files = [ f for f in os.listdir(dir) ]
         for f in files:

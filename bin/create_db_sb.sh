@@ -70,7 +70,7 @@ do
 
     # execute commands
     CMD1="python '${CODEDIR}/src/create_fasta.py' -s ${SPECIES} -f ${TYPE} -o '${OUTFILE}' -d -vv  &> '${LOGFILE}' "
-    CMD2="python '${CODEDIR}/src/decoyPYrat.v2.py' --output_fasta '${OUTFILE_dc}' --decoy_prefix=DECOY -t '${OUTFILE}.tmp' '${OUTFILE}' &> '${LOGFILE_dc_tg}' && cat ${OUTFILE_tg} ${OUTFILE_dc} > ${OUTFILE_dc_tg} "
+    CMD2="python '${CODEDIR}/src/decoyPYrat.v3.py' --output_fasta '${OUTFILE_dc}' --decoy_prefix=DECOY -t '${OUTFILE}.tmp' '${OUTFILE}' &> '${LOGFILE_dc_tg}' && cat ${OUTFILE_tg} ${OUTFILE_dc} > ${OUTFILE_dc_tg} "
     run_cmd "${CMD1} && ${CMD2}"
   done
 done

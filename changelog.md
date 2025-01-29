@@ -1,10 +1,11 @@
 ___
 ## v2.14
-```
-DATE: 2024_XX
-```
+
+### Date 📅 *2025_01*
 
 + Improving the URL request using a more robust library like *requests*, which handles streaming and large files better.
+
++ Add new version of decoyPYrat (v3). In this version, the '|' character is replaced by '_'in the decoy comment line.
 
 ___
 ## v2.13

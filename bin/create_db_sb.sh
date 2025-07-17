@@ -4,7 +4,8 @@
 # CODEDIR="S:/U_Proteomica/UNIDAD/DatosCrudos/jmrodriguezc/projects/iSanXoT-dbscripts"
 # BASEDIR="//tierra.cnic.es/SC/U_Proteomica/UNIDAD/iSanXoT_DBs"
 CODEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd -P)/.."
-BASEDIR="/mnt/tierra/U_Proteomica/UNIDAD/Databases/UniProt"
+# BASEDIR="/mnt/tierra/U_Proteomica/UNIDAD/Databases/UniProt"
+BASEDIR="S:/U_Proteomica/UNIDAD/Databases/UniProt"
 if [[ ! -z "$1" ]]; then
   VERSION=".${1}"
 else
@@ -61,16 +62,14 @@ do
     OUTDIR_spe="${OUTDIR}/${SPECIES}/sequences" # re-declare the outdir with date+version+species
     OUTNAME="${SPECIES}_${DATE}_${TYPE}"
     OUTFILE="${OUTDIR_spe}/${OUTNAME}.fasta"
-    LOGFILE="${LOGDIR}/create_fasta.${OUTNAME}.log"
 
     OUTFILE_dc="${OUTDIR_spe}/${OUTNAME}.decoy.fasta"
     OUTFILE_tg="${OUTDIR_spe}/${OUTNAME}.target.fasta"
     OUTFILE_dc_tg="${OUTDIR_spe}/${OUTNAME}.target-decoy.fasta"
-    LOGFILE_dc_tg="${LOGDIR}/decoyPYrat.${OUTNAME}.log"
 
     # execute commands
-    CMD1="python '${CODEDIR}/src/create_fasta.py' -s ${SPECIES} -f ${TYPE} -o '${OUTFILE}' -d -vv  &> '${LOGFILE}' "
-    CMD2="python '${CODEDIR}/src/decoyPYrat.v3.py' --output_fasta '${OUTFILE_dc}' --decoy_prefix=DECOY -t '${OUTFILE}.tmp' '${OUTFILE}' &> '${LOGFILE_dc_tg}' && cat ${OUTFILE_tg} ${OUTFILE_dc} > ${OUTFILE_dc_tg} "
+    CMD1="python '${CODEDIR}/src/create_fasta.py' -s ${SPECIES} -f ${TYPE} -o '${OUTFILE}' -d -vv "
+    CMD2="python '${CODEDIR}/src/decoyPYrat.v3.py' --output_fasta '${OUTFILE_dc}' --decoy_prefix=DECOY -t '${OUTFILE}.tmp' '${OUTFILE}' && cat ${OUTFILE_tg} ${OUTFILE_dc} > ${OUTFILE_dc_tg} "
     run_cmd "${CMD1} && ${CMD2}"
   done
 done
@@ -88,11 +87,10 @@ do
   CATFILE="${OUTDIR_spe}/${OUTNAME}.uniprot.tsv"
   CATFILE_HUMAN="${OUTDIR}/human/categories/human_${DATE}.uniprot.tsv"
   STAFILE="${OUTDIR_spe}/${OUTNAME}.stats.tsv"
-  LOGFILE="${LOGDIR}/create_sb.${OUTNAME}.log"
 
   # execute the program that creates the large file with categories from UniProt, and retrieve some statistical values.
-  CMD1="python '${CODEDIR}/src/create_sb.py' -s ${SPECIES} -o '${CATFILE}' -vv  &> '${LOGFILE}' "
-  CMD2="python '${CODEDIR}/src/stats_sb.py' -i '${CATFILE}' -o ${STAFILE} -vv  &>> '${LOGFILE}' "
+  CMD1="python '${CODEDIR}/src/create_sb.py' -s ${SPECIES} -o '${CATFILE}' -vv "
+  CMD2="python '${CODEDIR}/src/stats_sb.py' -i '${CATFILE}' -o ${STAFILE} -vv  "
   run_cmd "${CMD1} && ${CMD2}"
 
   # ADD THE ORTHOLOGS FOR "MINOR" SPECIES --------
@@ -100,13 +98,12 @@ do
     # get local variables
     BIOMARTFILE="${OUTDIR_spe}/${OUTNAME}.biomart.tsv"
     ORTHOLOGSFILE="${OUTDIR_spe}/${OUTNAME}_with_human_orthologs.uniprot.tsv"
-    LOGFILE="${LOGDIR}/create_orthologs.${OUTNAME}.log"
 
     # execute the programs:
     # dowload the human orthologs from Ensembl Biomart
     # retrieve the human categories from the orthologous genes
-    CMD1="python '${CODEDIR}/src/download_orthologs.py' -s ${SPECIES} -o '${BIOMARTFILE}' -vv  &> '${LOGFILE}' "
-    CMD2="python '${CODEDIR}/src/categorize_orthologs.py' -im '${BIOMARTFILE}' -ic1 '${CATFILE_HUMAN}' -ic2 '${CATFILE}' -o '${ORTHOLOGSFILE}'  &>> '${LOGFILE}' "
+    CMD1="python '${CODEDIR}/src/download_orthologs.py' -s ${SPECIES} -o '${BIOMARTFILE}' -vv "
+    CMD2="python '${CODEDIR}/src/categorize_orthologs.py' -im '${BIOMARTFILE}' -ic1 '${CATFILE_HUMAN}' -ic2 '${CATFILE}' -o '${ORTHOLOGSFILE}' "
     run_cmd "${CMD1} && ${CMD2}"
 
     # Rename CATEGORY FILE
@@ -128,14 +125,12 @@ do
     # execute the program that creates the relation table 'q2c' from the given columns of categories
     OUTNAME="q2c__${SPECIES}_${DATE}.${CNAME}"
     RTFILE="${OUTDIR_spe}/${OUTNAME}.tsv"
-    LOGFILE="${LOGDIR}/create_rt.${OUTNAME}.log"
-    CMD3="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${CATFILE}' -o '${RTFILE}' -i 'Protein' -j '${CCOLS}' -nj '${COUT}' &> '${LOGFILE}'"
+    CMD3="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${CATFILE}' -o '${RTFILE}' -i 'Protein' -j '${CCOLS}' -nj '${COUT}' "
 
     # execute the program that creates the relation table 'g2c' from the given columns of categories
     OUTNAME="g2c__${SPECIES}_${DATE}.${CNAME}"
     RTFILE="${OUTDIR_spe}/${OUTNAME}.tsv"
-    LOGFILE="${LOGDIR}/create_rt.${OUTNAME}.log"
-    CMD4="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${CATFILE}' -o '${RTFILE}' -i 'Gene'    -j '${CCOLS}' -nj '${COUT}' &> '${LOGFILE}'"
+    CMD4="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${CATFILE}' -o '${RTFILE}' -i 'Gene'    -j '${CCOLS}' -nj '${COUT}' "
 
     run_cmd "${CMD3} && ${CMD4}"
   done
@@ -155,8 +150,7 @@ do
     # execute the program that creates the relation table 'q2c' from the given columns of categories
     OUTNAME="q2c__${SPECIES}_${DATE}.${CNAME}"
     RTFILE="${OUTDIR_spe}/${OUTNAME}.tsv"
-    LOGFILE="${LOGDIR}/create_rt.${OUTNAME}.log"
-    CMD3="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${CATFILE}' -o '${RTFILE}' -i 'Protein' -j '${CCOLS}' -nj '${COUT}' &> '${LOGFILE}'"
+    CMD3="python '${CODEDIR}/src/create_rt.py' -vv  -ii '${CATFILE}' -o '${RTFILE}' -i 'Protein' -j '${CCOLS}' -nj '${COUT}' "
 
     run_cmd "${CMD3}"
   done

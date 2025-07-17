@@ -110,7 +110,7 @@ class creator:
         os.makedirs(self.cached_dir_kegg, exist_ok=True)
 
 
-    def _download_file(self, url, dest_path, retries=3, backoff_factor=0.3, chunk_size=16*1024):
+    def _download_file(self, url, dest_path, retries=5, backoff_factor=0.3, chunk_size=16*1024):
         '''
         Download file from URL with retries
         '''
@@ -127,10 +127,10 @@ class creator:
             session.mount('http://', adapter)
             session.mount('https://', adapter)
 
-            with session.get(url, stream=True) as r:
+            with session.get(url, headers={"Accept-Encoding": "identity"}, stream=False) as r: # disables gzip/deflate compression
                 r.raise_for_status()
                 with open(dest_path, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=chunk_size):
+                    for chunk in r.iter_content(chunk_size=chunk_size, decode_unicode=False):
                         if chunk:  # filter out keep-alive new chunks
                             f.write(chunk)
         except requests.exceptions.RequestException as e:

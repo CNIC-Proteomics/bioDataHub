@@ -1,7 +1,11 @@
 # Scripts for the Databases in the Proteomics Unit of CNIC
 
-### Requirements:
-Python3 and the Python packages saved in the "requirements.txt" file
+## Requirements
+
+You need to install the Python programming language and the following packages. To install these packages, you can use the pip module in Python:
+```
+pip install -r python_requirements.txt
+```
 
 
 ## Executions
@@ -107,6 +111,52 @@ python src/create_rt.py   -ii test/rabbit/rabbit_202306_with_human_orthologs.uni
 <br><br><br>
 ___
 
+# Download APPRIS annotations
+
+The "get_appris" service requires the APPRIS data files. To obtain these files for a specific species, you need to execute the following bash script:
+```bash
+./bin/create_dbs_appris.sh inprogress
+```
+
+## Obtain the method annotations
+
+1. Obtain the APPRIS annoations with the protein coordinates and CDS coordinates in GTF format:
+2. We can retrieve the APPRIS labels for the peptides regions:
+    - Principal Isoform (PI), region in the protein that is unique for the Principal isoform.
+    - Non-Principal Isoform (NPI), region in the protein that is unique for the Alternative (o Minor) isoforms.
+    - Overlap, region that are common for the PI and NPI isoforms.
+
+To obtain these files for a specific species, you need to execute the following bash script:
+```bash
+./bin/create_annots_appris.sh -f 202501
+or
+./bin/create_annots_appris.sh -f 202507 -v inprogress
+```
+
+1. Obtain the SPADE annoations with the protein coordinates and CDS coordinates in GTF format:
+```bash
+./bin/create_annots_spade.sh -f 202501
+or
+./bin/create_annots_spade.sh -f 202507 -v inprogress
+```
+
+<!--
+We can retrieve the APPRIS labels for the peptides regions:
+- Principal Isoform (PI), region in the protein that is unique for the Principal isoform.
+- Non-Principal Isoform (NPI), region in the protein that is unique for the Alternative (o Minor) isoforms.
+- Overlap, region that are common for the PI and NPI isoforms.
+To obtain these files for a specific species, you need to execute the following bash script:
+```bash
+./intersect_appris_dbs.sh
+```
+-->
+
+
+
+
+<br><br><br>
+___
+
 # Dowload AlphaFold proteomes
 
 
@@ -140,7 +190,7 @@ sudo apt-get install dssp
 sudo ln -s /usr/bin/mkdssp /usr/bin/dssp
 ```
 
-## Calculate DSSP
+## Calculate DSSP-RSA-Disorder (AlphaFold-disorder)
 
 The DSSP program calculates the most likely secondary structure assignment by reading the position of the atoms in a protein followed by 
 the calculation of the H-bond energy between all atoms.
@@ -206,6 +256,9 @@ The DSSP codes for secondary structure used here are:
 ```
 
 
+**Important!:** I have found a program that do exactly the same I did:
+https://github.com/BioComputingUP/AlphaFold-disorder/
+
 
 
 <br><br><br>
@@ -220,6 +273,10 @@ mkdir /mnt/tierra/U_Proteomica/UNIDAD/Databases/DisProt/2023_12
 cd /mnt/tierra/U_Proteomica/UNIDAD/Databases/DisProt/2023_12
 wget "https://disprot.org/api/search?release=2023_12&show_ambiguous=true&show_obsolete=false&format=tsv&namespace=all&get_consensus=false" -O DisProt_2023_12_ambiguous_evidences.tsv
 ```
+
+
+
+
 
 
 

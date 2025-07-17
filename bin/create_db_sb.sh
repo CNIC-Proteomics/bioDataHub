@@ -13,8 +13,6 @@ else
 fi
 DATE="$(date +"%Y%m")" # create date
 OUTDIR="${BASEDIR}/${DATE}${VERSION}" # with date+version folder
-WSDIR="${BASEDIR}/current_release"
-LOGDIR="${CODEDIR}/logs/${DATE}${VERSION}" # with date+version folder
 
 TYPE_LIST=("pro-sw" "pro-sw-tr")
 SPECIES_LIST=(human mouse rat pig rabbit zebrafish chicken sheep cow ecoli)
@@ -45,8 +43,6 @@ run_cmd () {
   eval $1
 }
 
-# prepare workspaces
-mkdir "${LOGDIR}"
 
 
 

@@ -6,26 +6,27 @@ BASEDIR="/mnt/tierra/U_Proteomica/UNIDAD/Databases/AlphaFold"
 BASESCRIPT="$(basename "$0")"
 BASENAME="${BASESCRIPT%.*}"
 FASTADIR="/mnt/tierra/U_Proteomica/UNIDAD/Databases/UniProt"
+SPECIES_LIST=(human mouse rat zebrafish)
+
     
 # Function to print usage information
 print_usage() {
     echo "Usage: ${BASESCRIPT} [options]"
     echo "Options:"
-    echo "  -v  Version of AlphaFold (ie. v4)"
     echo "  -f  Date of FASTA repository"
+    echo "  -v  Version of AlphaFold (ie. v4)"
     echo "  -w  Number of threads/n_workers"
     echo "  -h  Display this help message"
-    # Add more options here if needed
 }
 
 # Control the parameters
-while getopts "hv:f:w:" opt; do
+while getopts "hf:v:w:" opt; do
     case $opt in
-        v)
-            VERSION="${OPTARG}"
-            ;;
         f)
             FASTADATE="${OPTARG}"
+            ;;
+        v)
+            VERSION="${OPTARG}"
             ;;
         w)
             NTHREADS="${OPTARG}"
@@ -48,8 +49,6 @@ DATE="$(date +"%Y%m")" # create date
 OUTDIR="${BASEDIR}/${DATE}.${VERSION}" # with date+version folder
 LOGDIR="${CODEDIR}/logs/${DATE}.${VERSION}" # with date+version folder
 
-#SPECIES_LIST=(human mouse rat zebrafish)
-SPECIES_LIST=(mouse zebrafish)
 
 # Function that executes the input command
 run_cmd () {

@@ -1,4 +1,13 @@
 ___
+## v2.15
+
+### Date 📅 *2025_07*
+
++ Migrated the code that downloads the APPRIS database files.
++ Discarded the individual log files for each program.
+
+
+___
 ## v2.14
 
 ### Date 📅 *2025_01*

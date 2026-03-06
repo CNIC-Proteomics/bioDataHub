@@ -474,7 +474,7 @@ class creator:
         acc = record.accessions[0]
         # pattern = re.search(r'Name=([^\s|\;]*)', record.gene_name, re.I | re.M)
         # gene = pattern[1] if pattern else record.gene_name
-        gene = "".join([ re.sub('\s+.*$', '', r['Name']) if 'Name' in r else re.sub('\s+.*$', '', r['ORFNames'][0]) if 'ORFNames' in r else '' for r in record.gene_name ])
+        gene = "".join([ re.sub(r'\s+.*$', '', r['Name']) if 'Name' in r else re.sub(r'\s+.*$', '', r['ORFNames'][0]) if 'ORFNames' in r else '' for r in record.gene_name ])
         pattern = re.search(r'[RecName|SubName]: Full=([^\;|\{]*)', record.description, re.I | re.M)
         dsc = pattern[1] if pattern else record.description
         dclass = record.data_class
@@ -723,13 +723,13 @@ class creator:
                             if pattern:
                                 for m in pattern[1].split('\n'):
                                     if m.startswith('PATHWAY'):
-                                        m = re.sub('PATHWAY\s*','',m).strip()
-                                        ms = re.split('\s+', m, 1) # split only for the first space
+                                        m = re.sub(r'PATHWAY\s*','',m).strip()
+                                        ms = re.split(r'\s+', m, 1) # split only for the first space
                                         # rc += f"{ms[0]}>{''.join(ms[1:])};"
                                         rc += f"{ms[0]}>{''.join(ms[1:])}//"
                                     elif m.startswith(' '):
-                                        m = re.sub('^\s*','',m).strip()
-                                        ms = re.split('\s+', m, 1) # split only for the first space
+                                        m = re.sub(r'^\s*','',m).strip()
+                                        ms = re.split(r'\s+', m, 1) # split only for the first space
                                         # rc += f"{ms[0]}>{''.join(ms[1:])};"
                                         rc += f"{ms[0]}>{''.join(ms[1:])}//"
                                     else:
@@ -772,7 +772,7 @@ class creator:
                 for rcont in rconts:
                     id = rcont[0]
                     x = df[df[3].str.startswith(id)][[3,4]].values.tolist()[0] # get the panther id and family description
-                    x[0] = re.sub('\:.*$','',x[0]) # remove the subfamily id
+                    x[0] = re.sub(r'\:.*$','',x[0]) # remove the subfamily id
                     # dsc = x[1].replace(';',',')
                     # rcs = f"{x[0]}>{dsc};"
                     rcs = f"{x[0]}>{x[1]}//"

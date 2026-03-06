@@ -32,7 +32,7 @@ def get_cols_from_headers(cols, headers):
             if c in cols:
                 out.append(c)
             elif '*' in c:
-                c = c.replace('*','\w+')
+                c = c.replace('*',r'\w+')
                 for s in cols:
                     if re.match(c, s):
                         out = out + [ m for m in re.findall(c, s)]
@@ -66,7 +66,7 @@ def filter_rows(idf, filters):
             f = fc[1]            
             # get the columns that match with the given col name (regex)
             tup_avail = []
-            col = col.replace('*','\w+')# convert to regex replacing '*' to '\w+'
+            col = col.replace('*',r'\w+')# convert to regex replacing '*' to '\w+'
             col = rf"({col})"
             for i,c in enumerate(cols):
                 if re.match(col, c):
@@ -78,7 +78,7 @@ def filter_rows(idf, filters):
                 # eg.
                 # f = IDA,ISS,HDA
                 # r"IDA:\[([^\]]+)\]|ISS:\[([^\]]+)\]|HDA:\[([^\]]+)\]"
-                p = ":\[([^\]]+)\]|".join( re.split(r'\s*,\s*',f) )
+                p = r":\[([^\]]+)\]|".join( re.split(r'\s*,\s*',f) )
                 p = rf"{p}:\[([^\]]+)\]"
                 # create list of tuples
                 # apply pattern for the list of tuples                    

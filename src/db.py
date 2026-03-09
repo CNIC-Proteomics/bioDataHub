@@ -11,9 +11,11 @@ import shutil
 import json
 import pandas as pd
 import numpy as np
+import socket
 from Bio import SwissProt
 from Bio import SeqIO
 from Bio.KEGG import REST
+from OpenSSL import SSL, crypto
 
 
 class creator:
@@ -29,7 +31,8 @@ class creator:
     URL_UNIPROT = 'https://rest.uniprot.org/uniprotkb/stream?'
     URL_UNIPROT += 'includeIsoform=true&' # include all isoforms    
     # URL_CORUM   = 'http://mips.helmholtz-muenchen.de/corum/download/allComplexes.json.zip' #It doesn't work :-(
-    URL_CORUM   = os.path.join(LOCAL_DIR, '../cached/allComplexes.json.zip')
+    # URL_CORUM   = os.path.join(LOCAL_DIR, '../cached/allComplexes.json.zip')
+    URL_CORUM   = 'https://mips.helmholtz-muenchen.de/fastapi-corum/public/file/download_current_file?file_id=complete&file_format=json'
     URL_PANTHER = 'http://data.pantherdb.org/ftp/sequence_classifications/current_release/PANTHER_Sequence_Classification_files/'
     URL_APPRIS  = 'https://apprisws.bioinfo.cnio.es/pub/current_release/datafiles/'
     cRAP_FILE   = os.path.join(LOCAL_DIR, '../cached/cRAP/crap.modified.fasta')
@@ -101,7 +104,7 @@ class creator:
         # self.db_uniprot = self.TMP_DIR +'/../../../test/test_1033.dat'
         
         self.db_fasta = self.TMP_DIR +'/proteins.fasta'
-        self.db_corum   = self.TMP_DIR +'/'+ ".".join(os.path.basename( self.URL_CORUM ).split(".")[:-1]) # get the filename from the URL (without 'zip' extension)
+        self.db_corum   = self.TMP_DIR +'/'+ ".".join(['allComplexes', 'json'])
         self.db_panther = self.TMP_DIR +'/panther.dat'
         self.db_appris  = self.TMP_DIR +'/appris.dat'
         self.db_trifid  = self.TMP_DIR +'/trifid.dat'
@@ -262,6 +265,25 @@ class creator:
         else:
             logging.error(f"failed dowloading {name}")
 
+    def getPEMFile(self, host):
+        '''
+        Get the certificate to download CORUM
+        '''
+
+        dst = (host, 443)
+        ctx = SSL.Context(SSL.TLS_CLIENT_METHOD)
+        s = socket.create_connection(dst)
+        s = SSL.Connection(ctx, s)
+        s.set_connect_state()
+        s.set_tlsext_host_name(str.encode(dst[0]))
+        s.sendall(str.encode('HEAD / HTTP/1.0\n\n'))
+        peerCertChain = s.get_peer_cert_chain()
+        pemFile = ''
+
+        for cert in peerCertChain:
+            pemFile += crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("utf-8")
+
+        return pemFile
 
     def download_raw_dbs(self, filt=None):
         '''
@@ -296,17 +318,18 @@ class creator:
         
         # CORUM
         # download all complexes file (using the same name)
-        # unzip the file
         if not os.path.isfile(self.db_corum):
             url = self.URL_CORUM
-            db_dat = self.TMP_DIR +'/'+ os.path.basename(url)
-            # logging.info("get "+url+" > "+db_dat)
-            # urllib.request.urlretrieve(url, db_dat)
-            logging.info("copy "+url+" > "+db_dat)
-            shutil.copyfile(url, db_dat)
-            zip_ref = zipfile.ZipFile(db_dat, 'r')
-            zip_ref.extractall(self.TMP_DIR)
-            zip_ref.close()
+            db_dat = self.TMP_DIR +'/'+ 'allComplexes.json'
+            logging.debug("get "+url)
+            cert_corum = self.getPEMFile(self.URL_CORUM.split("/")[2])
+            cert_file = self.TMP_DIR +'/'+ 'corum_certificate.pem'
+            with open(cert_file, "w") as f:
+                f.write(cert_corum)
+            response = requests.get(url, verify=cert_file)
+            response.raise_for_status()          
+            with open(db_dat, "wb") as f:
+                f.write(response.content)
         else:
             logging.info('cached corum')
         

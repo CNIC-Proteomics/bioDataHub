@@ -860,12 +860,17 @@ class creator:
             xc = xpat[0] # column name
             # xp = xpat[1] # pattern
             # extract the information from the given UniProt accession
-            rcs = ''
+            rcs = []
             if datatxt:
-                comps = list(filter(lambda person: acc in person['subunits(UniProt IDs)'], datatxt))
+                comps = list(filter(lambda person: acc in [i["swissprot"]["uniprot_id"] for i in person['subunits']], datatxt))
                 if comps:
-                    # rcs += ";".join([ f"compID_{comp['ComplexID']}>{comp['ComplexName']}".replace(';',',') for comp in comps if 'ComplexID' in comp and 'ComplexName' in comp ])
-                    rcs += "//".join([ f"compID_{comp['ComplexID']}>{comp['ComplexName']}" for comp in comps if 'ComplexID' in comp and 'ComplexName' in comp ])
+                    for comp in comps:
+                        if 'complex_id' in comp and 'complex_name' in comp:
+                            rcs += [f"compID_{comp['complex_id']}>{comp['complex_name']}"]
+                if rcs:
+                    rcs = "\\".join(rcs)
+                else:
+                    rsc = ''
             # create list of cols and values
             if rcs != '':
                 xcols.append(xc)

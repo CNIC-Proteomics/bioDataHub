@@ -870,7 +870,7 @@ class creator:
                 if rcs:
                     rcs = "\\".join(rcs)
                 else:
-                    rsc = ''
+                    rcs = ''
             # create list of cols and values
             if rcs != '':
                 xcols.append(xc)

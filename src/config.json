@@ -3,6 +3,7 @@
         "scientific": "Homo sapiens",
         "taxonomy": "9606",
         "proteome": "UP000005640",
+        "kegg_organism": "hsa",
         "assembly": "GRCh38",
         "alphafold": "https://ftp.ebi.ac.uk/pub/databases/alphafold/latest/UP000005640_9606_HUMAN_--VERSION--.tar"
     },
@@ -10,6 +11,7 @@
         "scientific": "Mus musculus",
         "taxonomy": "10090",
         "proteome": "UP000000589",
+        "kegg_organism": "mmu",
         "assembly": "GRCm39",
         "alphafold": "https://ftp.ebi.ac.uk/pub/databases/alphafold/latest/UP000000589_10090_MOUSE_--VERSION--.tar"
     },
@@ -17,6 +19,7 @@
         "scientific": "Rattus norvegicus",
         "taxonomy": "10116",
         "proteome": "UP000002494",
+        "kegg_organism": "rno",
         "assembly": "mRatBN7.2",
         "alias": "rnorvegicus",
         "alphafold": "https://ftp.ebi.ac.uk/pub/databases/alphafold/latest/UP000002494_10116_RAT_--VERSION--.tar"
@@ -25,6 +28,7 @@
         "scientific": "Sus scrofa",
         "taxonomy": "9823",
         "proteome": "UP000008227",
+        "kegg_organism": "ssc",
         "assembly": "Sscrofa11.1",
         "alias": "sscrofa"
     },
@@ -32,12 +36,14 @@
         "scientific": "Oryctolagus cuniculus",
         "taxonomy": "9986",
         "proteome": "UP000001811",
+        "kegg_organism": "ocu",
         "alias": "ocuniculus"
     },
     "zebrafish": {
         "scientific": "Danio rerio",
         "taxonomy": "7955",
         "proteome": "UP000000437",
+        "kegg_organism": "dre",
         "assembly": "GRCz11",
         "alias": "drerio",
         "alphafold": "https://ftp.ebi.ac.uk/pub/databases/alphafold/latest/UP000000437_7955_DANRE_--VERSION--.tar"
@@ -46,6 +52,7 @@
         "scientific": "Gallus gallus",
         "taxonomy": "9031",
         "proteome": "UP000000539",
+        "kegg_organism": "gga",
         "assembly": "bGalGal1.mat.broiler.GRCg7b",
         "alias": "ggallus"
     },
@@ -53,18 +60,21 @@
         "scientific": "Ovis aries",
         "taxonomy": "9940",
         "proteome": "UP000002356",
+        "kegg_organism": "oas",
         "alias": "oaries"
     },
     "cow": {
         "scientific": "Bos taurus",
         "taxonomy": "9913",
         "proteome": "UP000009136",
+        "kegg_organism": "bta",
         "assembly": "ARS-UCD1.3_BAD_APPRIS",
         "alias": "btaurus"
     },
     "ecoli": {
         "scientific": "Escherichia coli",
         "taxonomy": "83334",
-        "proteome": "UP000000558"
+        "proteome": "UP000000558",
+        "kegg_organism": "eco"
     }
 }

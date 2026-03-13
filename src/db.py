@@ -74,6 +74,7 @@ class creator:
         if s in self.SPECIES_CFG.keys():
             self.species = s
             self.proteome_id = self.SPECIES_CFG[self.species]['proteome']
+            self.kegg_id = self.SPECIES_CFG[self.species]['kegg_organism']
             self.scientific = self.SPECIES_CFG[self.species]['scientific']
             self.taxonomy = self.SPECIES_CFG[self.species]['taxonomy']
             self.assembly = self.SPECIES_CFG[self.species]['assembly'] if 'assembly'in self.SPECIES_CFG[self.species] else None

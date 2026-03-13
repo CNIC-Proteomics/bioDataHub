@@ -86,11 +86,6 @@ class creator:
         self.TMP_DIR = self.LOCAL_DIR +'/../tmp/'+ self.TIME +'/'+ self.species
         os.makedirs(self.TMP_DIR, exist_ok=True)
         logging.debug(f"TMP_DIR: {self.TMP_DIR}")
-        
-        # prepare cached directory
-        self.CHD_DIR = self.LOCAL_DIR +'/../cached/'+ self.species
-        os.makedirs(self.CHD_DIR, exist_ok=True)
-        logging.debug(f"CACHED_DIR: {self.CHD_DIR}")
 
         # prepare the output directory if does not exist
         self.outdir = os.path.dirname(o)
@@ -112,8 +107,8 @@ class creator:
         self.db_appris  = self.TMP_DIR +'/appris.dat'
         self.db_trifid  = self.TMP_DIR +'/trifid.dat'
         self.db_corsair  = self.TMP_DIR +'/corsair.dat'
-        self.cached_dir_kegg = self.CHD_DIR +'/kegg'
-        os.makedirs(self.cached_dir_kegg, exist_ok=True)
+        self.CACHE_DIR = os.path.join(self.TMP_DIR, "kegg_cache")
+        os.makedirs(self.CACHE_DIR, exist_ok=True)
 
 
     def _download_file(self, url, dest_path, retries=5, backoff_factor=0.3, chunk_size=16*1024):
@@ -199,10 +194,8 @@ class creator:
             # check if all entries cached
             uncached = []
             batch_cache_files = {}
-            CACHE_DIR = os.path.join(self.TMP_DIR, "kegg_cache")
-            os.makedirs(CACHE_DIR, exist_ok=True)
             for e in entries:
-                f = os.path.join(CACHE_DIR, e.replace(":", "_") + ".txt")
+                f = os.path.join(self.CACHE_DIR, e.replace(":", "_") + ".txt")
                 batch_cache_files[e] = f
                 if not os.path.exists(f):
                     uncached.append(e)
@@ -246,7 +239,8 @@ class creator:
         batches = [db[i:i+10] for i in range(0, len(db), 10)] # 10 is max recommended batch size
         with ThreadPoolExecutor(max_workers=6) as ex:
             for i, batch_entries in enumerate(batches):
-                print(f"Downloading batch {i+1}/{len(batches)}")
+                if i+1 == 1 or i+1 == len(batches) or (i+1) % 10 == 0:
+                    logging.debug(f"Downloading KEGG batch {i+1}/{len(batches)}")
                 batch_result = ex.submit(self._fetch_kegg_batch, batch_entries).result()
                 result.update(batch_result)
         return result
@@ -424,6 +418,7 @@ class creator:
                         logging.warning(f"kegg - failed to retrieve: {e}\n")
         else:
             logging.info('cached kegg')
+        os.rmdir(self.CACHE_DIR)
     
         # APPRIS
         # get the list of species and extract the file name
@@ -483,6 +478,7 @@ class creator:
             logging.info('create reports from external data...')
             corum_json = None
             panther_df = None
+            kegg_dict = None
             appris_df = pd.DataFrame()
             trifid_df = pd.DataFrame()
             corsair_df = pd.DataFrame()
@@ -493,6 +489,12 @@ class creator:
                     
             if os.path.isfile(self.db_panther):
                 panther_df = pd.read_csv(self.db_panther, sep="\t", dtype=str, header=None, low_memory=False)
+
+            if os.path.isfile(self.db_kegg):
+                with open(self.db_kegg, 'r') as f:
+                    kegg_dict = f.read()
+                kegg_dict = [i for i in kegg_dict.split("///")]
+                kegg_dict = {self.kegg_id + ":" + i.split()[1]: i for i in kegg_dict[:-1]}
                 
             if os.path.isfile(self.db_appris):
                 try:                    
@@ -694,7 +696,7 @@ class creator:
                 if xdb == "GO":
                     (xcols, xvals) = self._extract_cat_go(rconts, xpats)
                 elif xdb == "KEGG": # remote access
-                    (xcols, xvals) = self._extract_cat_kegg(rconts, xpats)
+                    (xcols, xvals) = self._extract_cat_kegg(kegg_dict, rconts, xpats)
                 elif xdb == "PANTHER":
                     (xcols, xvals) = self._extract_cat_panther(panther_df, rconts, xpats, acc)
                 elif xdb == "Reactome":
@@ -784,7 +786,7 @@ class creator:
         xvals = list(map(list, zip(*xvals)))
         return (xcols, xvals)
 
-    def _extract_cat_kegg(self, rconts, xpats):
+    def _extract_cat_kegg(self, datadict, rconts, xpats):
         '''
         Parse the KEGG record
         '''
@@ -800,42 +802,26 @@ class creator:
                 id = rcont[0]
                 rc = ''
                 try:
-                    id2 = id.replace(':','_')
-                    of = self.cached_dir_kegg +f"/{id2}.txt"
-                    of2 = self.cached_dir_kegg +f"/{id2}.dat"
-                    if os.path.isfile(of):
-                        with open(of, 'r') as f:
-                            rc = f.read()
-                            rc = re.sub(';','//',rc)
-                    else:
-                        if os.path.isfile(of2):
-                            with open(of2, 'r') as f:
-                                record = f.read()
-                        else:
-                            record = REST.kegg_get(id).read()
-                            with open(of2, 'w') as f:
-                                f.write(record)
-                        if record:
-                            pattern = re.search(r'(PATHWAY\s*[\w\W]*)', record, re.I | re.M)
-                            if pattern:
-                                for m in pattern[1].split('\n'):
-                                    if m.startswith('PATHWAY'):
-                                        m = re.sub(r'PATHWAY\s*','',m).strip()
-                                        ms = re.split(r'\s+', m, 1) # split only for the first space
-                                        # rc += f"{ms[0]}>{''.join(ms[1:])};"
-                                        rc += f"{ms[0]}>{''.join(ms[1:])}//"
-                                    elif m.startswith(' '):
-                                        m = re.sub(r'^\s*','',m).strip()
-                                        ms = re.split(r'\s+', m, 1) # split only for the first space
-                                        # rc += f"{ms[0]}>{''.join(ms[1:])};"
-                                        rc += f"{ms[0]}>{''.join(ms[1:])}//"
-                                    else:
-                                        break
-                            if rc != '':
-                                # rc = re.sub(r'\;$','', rc) # delete ; at the end of string
-                                rc = re.sub(r'\/\/$','', rc)
-                                with open(of, 'w') as f:
-                                    f.write(rc)
+                    record = datadict[id]
+                    if record:
+                        pattern = re.search(r'(PATHWAY\s*[\w\W]*)', record, re.I | re.M)
+                        if pattern:
+                            for m in pattern[1].split('\n'):
+                                if m.startswith('PATHWAY'):
+                                    m = re.sub(r'PATHWAY\s*','',m).strip()
+                                    ms = re.split(r'\s+', m, 1) # split only for the first space
+                                    # rc += f"{ms[0]}>{''.join(ms[1:])};"
+                                    rc += f"{ms[0]}>{''.join(ms[1:])}//"
+                                elif m.startswith(' '):
+                                    m = re.sub(r'^\s*','',m).strip()
+                                    ms = re.split(r'\s+', m, 1) # split only for the first space
+                                    # rc += f"{ms[0]}>{''.join(ms[1:])};"
+                                    rc += f"{ms[0]}>{''.join(ms[1:])}//"
+                                else:
+                                    break
+                        if rc != '':
+                            # rc = re.sub(r'\;$','', rc) # delete ; at the end of string
+                            rc = re.sub(r'\/\/$','', rc)
                     if rc != '': rcs.append(rc)
                         
                     pass

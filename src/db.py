@@ -414,7 +414,7 @@ class creator:
         if not os.path.isfile(self.db_kegg):
             db = REST.kegg_list(database=self.kegg_id).read()
             db = [i.split("\t")[0] for i in db.split("\n")]
-            db = [i for i in db if i.startswith(self.db_kegg)]
+            db = [i for i in db if i.startswith(self.kegg_id)]
             result = self._download_kegg(db)
             with open(self.db_kegg, "w") as out:
                 for e in db:

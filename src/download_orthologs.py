@@ -65,7 +65,7 @@ def main(args):
         species = species_cfg[args.species]['alias']
 
         # preparing the query for the given species...
-        query = re.sub('\s*\n\s*', '', QUERY.replace('__SPECIES__',species))
+        query = re.sub(r'\s*\n\s*', '', QUERY.replace('__SPECIES__',species))
         
         # download orthologs
         logging.info("downloading the human orthologs...")

@@ -17,7 +17,7 @@ __status__ = "Development"
 def main(args):
     ''' Main function'''
 
-    logging.info("openning category file...")
+    logging.info("opening category file...")
     cat = pd.read_csv(args.infile, sep="\t", low_memory=False)
 
     logging.info("getting the number of reviewed proteins and unreviewed proteins with isoforms!...")
@@ -39,8 +39,15 @@ def main(args):
     out = dict()
     for c in c_prot.columns:
         if c in c_cols:
-            c_prot.loc[c_prot[c].notnull(), c] = c    
-            out.update( c_prot.groupby(c)['Protein'].nunique().to_dict() )
+            if len(c_prot.loc[c_prot[c].notnull(), c]) > 0:
+                if c == 'norm_trifid_score' or c == 'corsair_score':
+                    c_prot.loc[c_prot[c].notnull(), c] = -1
+                    out[c] = int(c_prot.groupby(c)['Protein'].nunique().iloc[0])
+                else:
+                    c_prot.loc[c_prot[c].notnull(), c] = c
+                    out.update( c_prot.groupby(c)['Protein'].nunique().to_dict() ) # PROBLEM! PROTEIN IS BLANK
+            else:
+                out[c] = 0
     category_prot = pd.DataFrame().from_dict(out.items())
 
     logging.info("concating the stats reports...")

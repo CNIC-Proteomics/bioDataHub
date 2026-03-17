@@ -516,6 +516,8 @@ class creator:
                 trifid_df = pd.read_csv(self.db_trifid, sep="\t", dtype=str, usecols=['gene_id','transcript_id','norm_trifid_score'], low_memory=False)
                 
             if os.path.isfile(self.db_corsair):
+                if os.stat(self.db_corsair).st_size == 0:
+                    sys.exit( "CORSAIR data file from assembly " + str(self.assembly) + " is empty")
                 df = pd.read_csv(self.db_corsair, sep="\t", dtype=str, header=None, low_memory=False)
                 # create a column with the gene_id and transcriot_id
                 df_notes = pd.DataFrame()                

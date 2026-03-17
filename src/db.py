@@ -214,7 +214,7 @@ class creator:
             try:
                 raw = REST.kegg_get(query).read()
             except Exception as exc:
-                print(f"[ERROR] Failed batch {uncached}: {exc}")
+                logging.error(f"[ERROR] Failed batch {uncached}: {exc}")
                 return {e: None for e in entries}
             blocks = raw.strip().split("///")
             result = {}

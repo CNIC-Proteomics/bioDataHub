@@ -418,7 +418,7 @@ class creator:
                         logging.warning(f"kegg - failed to retrieve: {e}\n")
         else:
             logging.info('cached kegg')
-        os.rmdir(self.CACHE_DIR)
+        shutil.rmtree(self.CACHE_DIR)
     
         # APPRIS
         # get the list of species and extract the file name

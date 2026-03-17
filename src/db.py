@@ -317,23 +317,25 @@ class creator:
         else:
             logging.error(f"failed dowloading {name}")
 
-    def getPEMFile(self, host):
+    def getPEMFile(self, host, port=443):
         '''
         Get the certificate to download CORUM
         '''
 
-        dst = (host, 443)
+        dst = (host, port)
         ctx = SSL.Context(SSL.TLS_CLIENT_METHOD)
         s = socket.create_connection(dst)
-        s = SSL.Connection(ctx, s)
-        s.set_connect_state()
-        s.set_tlsext_host_name(str.encode(dst[0]))
-        s.sendall(str.encode('HEAD / HTTP/1.0\n\n'))
-        peerCertChain = s.get_peer_cert_chain()
+        c = SSL.Connection(ctx, s)
+        c.set_connect_state()
+        c.set_tlsext_host_name(str.encode(dst[0]))
+        c.sendall(str.encode('HEAD / HTTP/1.0\n\n'))
+        peerCertChain = c.get_peer_cert_chain()
         pemFile = ''
 
         for cert in peerCertChain:
             pemFile += crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("utf-8")
+        s.close()
+        c.close()
 
         return pemFile
 
@@ -379,7 +381,7 @@ class creator:
             with open(cert_file, "w") as f:
                 f.write(cert_corum)
             response = requests.get(url, verify=cert_file)
-            response.raise_for_status()          
+            response.raise_for_status()
             with open(db_dat, "wb") as f:
                 f.write(response.content)
         else:

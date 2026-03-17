@@ -68,7 +68,7 @@
         "taxonomy": "9913",
         "proteome": "UP000009136",
         "kegg_organism": "bta",
-        "assembly": "ARS-UCD1.3",
+        "assembly": "ARS-UCD2.0",
         "alias": "btaurus"
     },
     "ecoli": {

@@ -46,7 +46,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', date
 #############
 # Constants #
 #############
-AF_PDB_PATTHER = 'AF-(.*)-F1-model_v4'
+AF_PDB_PATTHER = 'AF-(.*)-F1'
 
 DSSP_HEADER = [
 'DSSP index',

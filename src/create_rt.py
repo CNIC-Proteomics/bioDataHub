@@ -88,7 +88,8 @@ def filter_rows(idf, filters):
     
     # Important! for the reduction of memory
     # remove duplicates
-    idf.drop_duplicates(inplace=True)
+    # idf.drop_duplicates(inplace=True)
+    idf = idf.drop_duplicates()
 
     return idf
 
@@ -134,10 +135,15 @@ def extract_and_join_columns(idf, headers_inf, headers_sup, cols_inf, cols_sup):
         odf[header] = _extract_and_join_columns(idf, col, header)
 
     # remove duplicates to reduce the use of memory
-    odf.drop_duplicates(inplace=True)
+    #odf.drop_duplicates(inplace=True)
     # remove row with any empty columns
-    odf.replace('', np.nan, inplace=True)
-    odf.dropna(inplace=True)
+    #odf.replace('', np.nan, inplace=True)
+    #odf.dropna(inplace=True)
+    odf = (
+        odf.drop_duplicates()
+        .replace('', np.nan)
+        .dropna()
+    )
     
     return odf
 
@@ -145,7 +151,8 @@ def extract_and_join_columns(idf, headers_inf, headers_sup, cols_inf, cols_sup):
 def exploding_columns(idf):
     def _exploding_columns(idf, x, y):
         # replace np.nan to ''
-        idf.replace(np.nan, '', inplace=True)
+        #idf.replace(np.nan, '', inplace=True)
+        idf = idf.replace(np.nan, '')
         # Exploding into multiple cells
         # We start with creating a new dataframe from the series with  as the index
         df = pd.DataFrame(idf[x].str.split('//').tolist(), index=idf[y].values).stack().rename(x)
@@ -153,8 +160,12 @@ def exploding_columns(idf):
         # convert the index, which is a list of tuple, into columns
         # level_0 is the correct
         # remove level_1 column
-        df.rename(columns={'level_0': y}, inplace=True)
-        df.drop(['level_1'], axis=1, inplace=True)
+        #df.rename(columns={'level_0': y}, inplace=True)
+        #df.drop(['level_1'], axis=1, inplace=True)
+        df = (
+            df.rename(columns={'level_0': y})
+            .drop(['level_1'], axis=1)
+        )
         return df
         
     cols = idf.columns.tolist()
@@ -256,16 +267,23 @@ def main(args):
     # pattern = r'\|[EXP|IDA|IPI|IMP|IGI|IEP|HTP|HDA|HMP|HGI|HEP|IBA|IBD|IKR|IRD].*$'
     if pattern:
         logging.info("remove a given pattern from the categories...")
-        outdat[headers_inf].str.replace(pattern,'', regex=True, inplace=True)
-        outdat[headers_sup].str.replace(pattern,'', regex=True, inplace=True)
+        #outdat[headers_inf].str.replace(pattern,'', regex=True, inplace=True)
+        #outdat[headers_sup].str.replace(pattern,'', regex=True, inplace=True)
+        outdat[headers_inf] = outdat[headers_inf].str.replace(pattern,'', regex=True)
+        outdat[headers_sup] = outdat[headers_sup].str.replace(pattern,'', regex=True)
         
 
     logging.info("remove duplicates and remove row with any empty column")
     # remove duplicates
-    outdat.drop_duplicates(inplace=True)
+    #outdat.drop_duplicates(inplace=True)
     # remove row with any empty columns
-    outdat.replace('', np.nan, inplace=True)
-    outdat.dropna(inplace=True)
+    #outdat.replace('', np.nan, inplace=True)
+    #outdat.dropna(inplace=True)
+    outdat = (
+        outdat.drop_duplicates()
+        .replace('', np.nan)
+        .dropna()
+    )
 
 
     if outheader_inf:

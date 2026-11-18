@@ -288,10 +288,12 @@ def main(args):
 
     if outheader_inf:
         logging.info("rename the inf header in the output file")
-        outdat.columns.values[1] = outheader_inf
+        #outdat.columns.values[1] = outheader_inf
+        outdat.rename(columns={outdat.columns[1]: outheader_inf})
     if outheader_sup:
         logging.info("rename the sup header in the output file")
-        outdat.columns.values[0] = outheader_sup
+        #outdat.columns.values[0] = outheader_sup
+        outdat.rename(columns={outdat.columns[0]: outheader_sup})
 
 
     logging.info('print output')
